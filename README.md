@@ -1,112 +1,18 @@
+# 💫 About Me:
+🔭 I’m currently working on: developing a desktop-based Invoice Application with custom print layouts.<br>👯 I’m looking to collaborate on: web-based management tools and inventory systems.<br>🤝 I’m looking for help with: integrating machine learning libraries into legacy PHP applications.<br>🌱 I’m currently learning: Python, Computer Vision, and full-stack Desktop App development.<br>💬 Ask me about: CCTV Networks (Hikvision/Dahua), VLAN configurations, and PHP/MySQL development.<br>⚡ Fun fact: I speak English, Urdu, and Punjabi—and I can fix your network hardware just as fast as I can debug your code!
 
 
-It covers everything: Features, Installation, Login details, and how to use it.
+## 🌐 Socials:
+[![Facebook](https://img.shields.io/badge/Facebook-%231877F2.svg?logo=Facebook&logoColor=white)](https://facebook.com/Mian Werad) [![Instagram](https://img.shields.io/badge/Instagram-%23E4405F.svg?logo=Instagram&logoColor=white)](https://instagram.com/mian_werad) [![LinkedIn](https://img.shields.io/badge/LinkedIn-%230077B5.svg?logo=linkedin&logoColor=white)](https://linkedin.com/in/muhammad-werad-aslam-wa7) 
 
-🛡️ TrustSafe Invoice Manager (Web Edition)
-A powerful, secure, and mobile-friendly Invoice & Inventory Management System built with Node.js and SQLite. Designed for small businesses to manage sales, stock, and customers from anywhere using a web browser.
+# 💻 Tech Stack:
+![C](https://img.shields.io/badge/c-%2300599C.svg?style=for-the-badge&logo=c&logoColor=white) ![C++](https://img.shields.io/badge/c++-%2300599C.svg?style=for-the-badge&logo=c%2B%2B&logoColor=white) ![CSS3](https://img.shields.io/badge/css3-%231572B6.svg?style=for-the-badge&logo=css3&logoColor=white) ![HTML5](https://img.shields.io/badge/html5-%23E34F26.svg?style=for-the-badge&logo=html5&logoColor=white) ![JavaScript](https://img.shields.io/badge/javascript-%23323330.svg?style=for-the-badge&logo=javascript&logoColor=%23F7DF1E) ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=for-the-badge&logo=kotlin&logoColor=white) ![PHP](https://img.shields.io/badge/php-%23777BB4.svg?style=for-the-badge&logo=php&logoColor=white) ![Python](https://img.shields.io/badge/python-3670A0?style=for-the-badge&logo=python&logoColor=ffdd54) ![Firebase](https://img.shields.io/badge/firebase-%23039BE5.svg?style=for-the-badge&logo=firebase) ![Render](https://img.shields.io/badge/Render-%46E3B7.svg?style=for-the-badge&logo=render&logoColor=white) ![Oracle](https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=white) ![Google Cloud](https://img.shields.io/badge/GoogleCloud-%234285F4.svg?style=for-the-badge&logo=google-cloud&logoColor=white) ![NPM](https://img.shields.io/badge/NPM-%23CB3837.svg?style=for-the-badge&logo=npm&logoColor=white) ![React](https://img.shields.io/badge/react-%2320232a.svg?style=for-the-badge&logo=react&logoColor=%2361DAFB) ![Vite](https://img.shields.io/badge/vite-%23646CFF.svg?style=for-the-badge&logo=vite&logoColor=white) ![Vue.js](https://img.shields.io/badge/vue.js-%2335495e.svg?style=for-the-badge&logo=vuedotjs&logoColor=%234FC08D) ![WordPress](https://img.shields.io/badge/WordPress-%23117AC9.svg?style=for-the-badge&logo=WordPress&logoColor=white) ![Windicss](https://img.shields.io/badge/windicss-48B0F1.svg?style=for-the-badge&logo=windi-css&logoColor=white) ![Web3.js](https://img.shields.io/badge/web3.js-F16822?style=for-the-badge&logo=web3.js&logoColor=white) ![Webpack](https://img.shields.io/badge/webpack-%238DD6F9.svg?style=for-the-badge&logo=webpack&logoColor=black) ![Apache](https://img.shields.io/badge/apache-%23D42029.svg?style=for-the-badge&logo=apache&logoColor=white) ![MySQL](https://img.shields.io/badge/mysql-4479A1.svg?style=for-the-badge&logo=mysql&logoColor=white) ![MongoDB](https://img.shields.io/badge/MongoDB-%234ea94b.svg?style=for-the-badge&logo=mongodb&logoColor=white) ![Adobe](https://img.shields.io/badge/adobe-%23FF0000.svg?style=for-the-badge&logo=adobe&logoColor=white) ![Adobe Acrobat Reader](https://img.shields.io/badge/Adobe%20Acrobat%20Reader-EC1C24.svg?style=for-the-badge&logo=Adobe%20Acrobat%20Reader&logoColor=white) ![Adobe Illustrator](https://img.shields.io/badge/adobe%20illustrator-%23FF9A00.svg?style=for-the-badge&logo=adobe%20illustrator&logoColor=white) ![Adobe Photoshop](https://img.shields.io/badge/adobe%20photoshop-%2331A8FF.svg?style=for-the-badge&logo=adobe%20photoshop&logoColor=white) ![Figma](https://img.shields.io/badge/figma-%23F24E1E.svg?style=for-the-badge&logo=figma&logoColor=white) ![Canva](https://img.shields.io/badge/Canva-%2300C4CC.svg?style=for-the-badge&logo=Canva&logoColor=white) ![NumPy](https://img.shields.io/badge/numpy-%23013243.svg?style=for-the-badge&logo=numpy&logoColor=white) ![Pandas](https://img.shields.io/badge/pandas-%23150458.svg?style=for-the-badge&logo=pandas&logoColor=white) ![scikit-learn](https://img.shields.io/badge/scikit--learn-%23F7931E.svg?style=for-the-badge&logo=scikit-learn&logoColor=white) ![GitHub](https://img.shields.io/badge/github-%23121011.svg?style=for-the-badge&logo=github&logoColor=white) ![Git](https://img.shields.io/badge/git-%23F05033.svg?style=for-the-badge&logo=git&logoColor=white) ![Cisco](https://img.shields.io/badge/cisco-%23049fd9.svg?style=for-the-badge&logo=cisco&logoColor=black) ![CMake](https://img.shields.io/badge/CMake-%23008FBA.svg?style=for-the-badge&logo=cmake&logoColor=white) ![Meta](https://img.shields.io/badge/Meta-%230467DF.svg?style=for-the-badge&logo=Meta&logoColor=white) ![Portfolio](https://img.shields.io/badge/Portfolio-%23000000.svg?style=for-the-badge&logo=firefox&logoColor=#FF7139) ![Oracle](https://img.shields.io/badge/Oracle-F80000?style=for-the-badge&logo=oracle&logoColor=white) ![NodeJS](https://img.shields.io/badge/node.js-6DA55F?style=for-the-badge&logo=node.js&logoColor=white)
+# 📊 GitHub Stats:
+![](https://github-readme-stats.vercel.app/api?username=mianwerad007&theme=dark&hide_border=false&include_all_commits=false&count_private=false)<br/>
+![](https://nirzak-streak-stats.vercel.app/?user=mianwerad007&theme=dark&hide_border=false)<br/>
+![](https://github-readme-stats.vercel.app/api/top-langs/?username=mianwerad007&theme=dark&hide_border=false&include_all_commits=false&count_private=false&layout=compact)
 
-🚀 Key Features
-📊 Dashboard: Real-time sales overview, revenue stats, and sales charts.
+---
+[![](https://visitcount.itsvg.in/api?id=mianwerad007&icon=0&color=0)](https://visitcount.itsvg.in)
 
-🧾 Invoicing: Create professional invoices with Tax, Discount, and Service Charges.
-
-📝 Quotations: Generate estimates and convert them to invoices with one click.
-
-📦 Inventory Management: Track stock levels with Low Stock Alerts.
-
-🛑 Strict Stock Mode: Optional setting to prevent selling items out of stock.
-
-📱 Mobile Ready: Fully responsive design works on Phones, Tablets, and Laptops.
-
-💬 WhatsApp Integration: Send invoice details directly to customers via WhatsApp.
-
-👥 User Roles: Admin (Full Access) and Operator (Restricted Access) roles.
-
-💾 Data Safety: Manual Database Backup & Restore + CSV Export.
-
-🖨️ Print Layout: Professional Navy Blue print template for thermal or A4 printers.
-
-🛠️ Tech Stack
-Backend: Node.js, Express.js
-
-Database: SQLite3 (Local file-based DB)
-
-Frontend: HTML5, Bootstrap 5, Vanilla JavaScript
-
-Dependencies: express, sqlite3, express-session, multer
-
-⚙️ Installation & Local Setup
-Follow these steps to run the software on your computer (VS Code).
-
-1. Prerequisites
-Install Node.js (LTS Version).
-
-Install Git.
-
-2. Clone & Install
-Bash
-
-# Clone this repository
-git clone https://github.com/YOUR_USERNAME/trustsafe-invoice-manager.git
-
-# Go into the folder
-cd trustsafe-invoice-manager
-
-# Install dependencies
-npm install
-3. Run the App
-Bash
-
-node index.js
-You will see a message: Server running on port 3000.
-
-4. Access the App
-On PC: Open your browser and go to http://localhost:3000
-
-On Mobile: Connect to the same Wi-Fi, find your PC's IP address (e.g., 192.168.1.5), and go to http://192.168.1.5:3000.
-
-🔑 Default Login Credentials
-When you run the app for the first time, use these details:
-
-Username: admin
-
-Password: admin123
-
-(You can add more users or change passwords inside the User Management section).
-
-☁️ How to Deploy Online (Free)
-To access this app from anywhere over the internet (without keeping your PC on), you can deploy it for free:
-
-Option 1: Replit / Glitch
-Upload the files to Replit or Glitch.
-
-Run npm install.
-
-Click "Run".
-
-Use the provided URL on any device.
-
-Option 2: Render.com
-Push this code to GitHub.
-
-Go to Render -> New Web Service.
-
-Connect your GitHub Repo.
-
-Build Command: npm install
-
-Start Command: node index.js
-
-📂 Project Structure
-├── public/              # Frontend Files
-│   ├── index.html       # Main UI
-│   ├── renderer.js      # App Logic
-│   ├── api-adapter.js   # Bridge between UI and Server
-│   └── favicon.png      # App Icon
-├── database.js          # Database Schema & Setup
-├── index.js             # Main Server (Express App)
-├── package.json         # Project Dependencies
-└── README.md            # Documentation
-📝 License
-This project is created for TrustSafe Services. Developed by Muhammad Werad Aslam
-](https://www.facebook.com/mian.werad.7/)
+<!-- Proudly created with GPRM ( https://gprm.itsvg.in ) -->
