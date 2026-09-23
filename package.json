@@ -1,14 +1,60 @@
 {
-  "name": "trustsafe-web",
+  "name": "trustsafe-invoice-manager",
+  "productName": "TSS Setup",
   "version": "1.0.0",
-  "main": "index.js",
+  "description": "Invoice Management System",
+  "author": "TrustSafe Services",
+  "main": "main.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "electron-forge start",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "dependencies": {
-    "express": "^4.18.2",
-    "express-session": "^1.17.3",
-    "multer": "^1.4.5-lts.1",
+    "chart.js": "^4.5.1",
+    "chartjs-chart-financial": "^0.2.1",
+    "electron-squirrel-startup": "^1.0.0",
+    "lightweight-charts": "^5.0.9",
     "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "@electron-forge/cli": "^7.2.0",
+    "@electron-forge/maker-deb": "^7.2.0",
+    "@electron-forge/maker-rpm": "^7.2.0",
+    "@electron-forge/maker-squirrel": "^7.2.0",
+    "@electron-forge/maker-zip": "^7.2.0",
+    "electron": "^28.0.0"
+  },
+  "config": {
+    "forge": {
+      "packagerConfig": {
+        "icon": "icon"
+      },
+      "makers": [
+        {
+          "name": "@electron-forge/maker-squirrel",
+          "config": {
+            "name": "trustsafe_invoice_manager",
+            "authors": "TrustSafe Services",
+            "description": "Invoice Management System",
+            "setupIcon": "icon.ico"
+          }
+        },
+        {
+          "name": "@electron-forge/maker-zip",
+          "platforms": [
+            "darwin"
+          ]
+        },
+        {
+          "name": "@electron-forge/maker-deb",
+          "config": {}
+        },
+        {
+          "name": "@electron-forge/maker-rpm",
+          "config": {}
+        }
+      ]
+    }
   }
 }

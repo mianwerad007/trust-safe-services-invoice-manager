@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TrustSafe Invoice Manager</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="icon" type="image/png" href="favicon.png">
+    <style>
+        body {
+            overflow-x: hidden;
+            background: #f8f9fa;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .sidebar {
+            min-height: 100vh;
+            background: #2c3e50;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .sidebar a {
+            color: #bdc3c7;
+            text-decoration: none;
+            display: block;
+            padding: 15px 20px;
+            border-bottom: 1px solid #34495e;
+            transition: 0.2s;
+            cursor: pointer;
+        }
+
+        .sidebar a:hover,
+        .sidebar a.active {
+            background: #3498db;
+            color: white;
+            padding-left: 25px;
+        }
+
+        .sidebar i {
+            width: 25px;
+            text-align: center;
+            margin-right: 10px;
+        }
+
+        .page-section {
+            display: none;
+            animation: fadeIn 0.4s;
+        }
+
+        .page-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, rgba(44, 62, 80, 0.9), rgba(52, 152, 219, 0.9)), url('https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzhqNWlraTBjcmk1djRtZGh0OWZhdDdic2E5OG55bmt0MWtvcWs3aCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/RK57ObFv0ZHcMDSiRd/giphy.gif');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .item-list-container {
+            position: absolute;
+            background: white;
+            border: 1px solid #ddd;
+            width: 100%;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .item-list-option {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #eee;
+        }
+
+        .item-list-option:hover {
+            background: #f0f0f0;
+        }
+
+        #printable-area {
+            display: none;
+        }
+
+        @media print {
+            @page {
+                size: A4;
+                margin: 1cm;
+            }
+
+            .sidebar,
+            .login-overlay,
+            .no-print,
+            .page-section,
+            #app-layout,
+            .btn,
+            .modal-backdrop {
+                display: none !important;
+            }
+
+            body {
+                background: white;
+                -webkit-print-color-adjust: exact;
+                margin: 0;
+                padding: 0;
+            }
+
+            #printable-area {
+                display: block !important;
+                width: 100%;
+                font-family: Arial, Helvetica, sans-serif;
+                color: #000;
+            }
+
+            .print-header-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                margin-bottom: 10px;
+            }
+
+            .ph-left {
+                width: 60%;
+            }
+
+            .ph-right {
+                width: 35%;
+                text-align: right;
+            }
+
+            .company-title {
+                font-size: 24pt;
+                font-weight: bold;
+                color: #1a2d5c;
+                margin-bottom: 5px;
+            }
+
+            .company-details {
+                font-size: 10pt;
+                line-height: 1.4;
+                color: #333;
+            }
+
+            .top-divider {
+                border-bottom: 3px solid #1a2d5c;
+                margin: 10px 0 20px 0;
+            }
+
+            .invoice-heading {
+                text-align: center;
+                font-size: 24pt;
+                font-weight: bold;
+                color: #1a2d5c;
+                text-transform: uppercase;
+                margin-bottom: 30px;
+                letter-spacing: 2px;
+            }
+
+            .info-grid {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 20px;
+            }
+
+            .info-left {
+                width: 55%;
+            }
+
+            .info-right {
+                width: 40%;
+                text-align: right;
+            }
+
+            .label-bold {
+                font-weight: bold;
+                font-size: 11pt;
+                color: #333;
+                margin-bottom: 5px;
+            }
+
+            .cust-name {
+                font-size: 16pt;
+                font-weight: bold;
+                margin-bottom: 5px;
+            }
+
+            .meta-line {
+                font-size: 10pt;
+                margin-bottom: 3px;
+            }
+
+            .meta-val {
+                font-weight: bold;
+            }
+
+            .blue-table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-bottom: 5px;
+                font-size: 10pt;
+            }
+
+            .blue-table th {
+                background-color: #1a2d5c !important;
+                color: white !important;
+                padding: 10px 5px;
+                text-align: center;
+                text-transform: uppercase;
+                border: 1px solid #000;
+            }
+
+            .blue-table td {
+                padding: 8px 5px;
+                border: 1px solid #000;
+                vertical-align: middle;
+            }
+
+            .col-sr {
+                width: 8%;
+                text-align: center;
+                font-weight: bold;
+                background: #f2f2f2;
+            }
+
+            .col-item {
+                width: 42%;
+                text-align: left;
+                padding-left: 10px !important;
+            }
+
+            .col-qty {
+                width: 10%;
+                text-align: center;
+            }
+
+            .col-unit {
+                width: 10%;
+                text-align: center;
+            }
+
+            .col-price {
+                width: 15%;
+                text-align: right;
+                padding-right: 10px !important;
+            }
+
+            .col-amt {
+                width: 15%;
+                text-align: right;
+                font-weight: bold;
+                padding-right: 10px !important;
+            }
+
+            .row-summary {
+                font-weight: bold;
+                background-color: white;
+            }
+
+            .row-summary td {
+                border: 1px solid #000;
+            }
+
+            .bottom-grid {
+                display: flex;
+                justify-content: space-between;
+                margin-top: 20px;
+            }
+
+            .bg-left {
+                width: 60%;
+                padding-right: 20px;
+            }
+
+            .bg-right {
+                width: 35%;
+            }
+
+            .amount-words-label {
+                font-weight: bold;
+                font-size: 11pt;
+                margin-bottom: 5px;
+                color: #333;
+            }
+
+            .amount-words-text {
+                font-style: italic;
+                font-size: 11pt;
+                text-transform: uppercase;
+                margin-bottom: 20px;
+                color: #444;
+            }
+
+            .terms-section h6 {
+                font-weight: bold;
+                font-size: 11pt;
+                margin-bottom: 5px;
+            }
+
+            .terms-section ul {
+                padding-left: 20px;
+                margin: 0;
+                font-size: 9pt;
+            }
+
+            .terms-section li {
+                margin-bottom: 3px;
+            }
+
+            .totals-box {
+                width: 100%;
+                border-collapse: collapse;
+            }
+
+            .totals-box td {
+                padding: 8px;
+                border: 1px solid #000;
+                font-size: 11pt;
+                font-weight: bold;
+            }
+
+            .totals-box .t-label {
+                text-align: right;
+                padding-right: 15px;
+            }
+
+            .totals-box .t-val {
+                text-align: right;
+                width: 50%;
+            }
+
+            .totals-box .final-row {
+                background-color: #1a2d5c !important;
+                color: white !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div id="login-screen" class="login-overlay">
+        <div class="card p-5 shadow-lg border-0 bg-white" style="width: 400px; border-radius: 15px;">
+            <div class="text-center mb-4"><i class="fas fa-user-shield fa-4x text-primary"></i>
+                <h3 class="mt-3 fw-bold">TrustSafe</h3><small class="text-muted">Secure Invoice Manager v6</small>
+            </div>
+            <div class="form-floating mb-3"><input type="text" id="login-user" class="form-control"
+                    placeholder="Username"><label>Username</label></div>
+            <div class="input-group mb-4">
+                <div class="form-floating flex-grow-1"><input type="password" id="login-pass" class="form-control"
+                        placeholder="Password"><label>Password</label></div><span class="input-group-text bg-white"
+                    onclick="togglePassword()" style="cursor: pointer;"><i class="fas fa-eye"
+                        id="toggle-password-icon"></i></span>
+            </div>
+            <button onclick="handleLogin()" class="btn btn-primary w-100 btn-lg">Sign In</button>
+        </div>
+    </div>
+
+    <div class="container-fluid" id="app-layout" style="display:none;">
+        <div class="row">
+            <div class="col-md-2 sidebar p-0 no-print">
+                <div class="p-4 text-center bg-dark">
+                    <h4 class="mb-0">TrustSafe</h4><small class="text-white-50">Invoice Manager</small>
+                    <div class="mt-2 badge bg-info" id="user-role-badge"></div>
+                </div>
+                <nav class="mt-3">
+                    <a href="#" id="nav-dashboard" onclick="showPage('dashboard')" class="active"><i
+                            class="fas fa-chart-line"></i> Dashboard</a>
+                    <a href="#" id="nav-create" onclick="showPage('create-invoice')"><i class="fas fa-file-invoice"></i>
+                        Create Invoice</a>
+                    <a href="#" id="nav-quotes" onclick="showPage('quotations')"><i class="fas fa-file-contract"></i>
+                        Quotations</a>
+                    <a href="#" id="nav-items" onclick="showPage('items')"><i class="fas fa-box-open"></i> Items
+                        Manager</a>
+                    <a href="#" id="nav-customers" onclick="showPage('customers')"><i class="fas fa-users"></i>
+                        Customers</a>
+                    <a href="#" id="nav-history" onclick="showPage('view-invoices')"><i class="fas fa-list"></i> All
+                        Invoices</a>
+                    <a href="#" id="nav-users" onclick="showPage('users')" style="display:none;"><i
+                            class="fas fa-user-shield"></i> Users</a>
+                    <a href="#" id="nav-logs" onclick="showPage('logs')" style="display:none;"><i
+                            class="fas fa-history"></i> Activity Logs</a>
+                    <a href="#" id="nav-settings" onclick="showPage('settings')"><i class="fas fa-cog"></i> Settings</a>
+                    <a href="#" onclick="location.reload()" class="mt-5 text-danger border-top border-secondary"><i
+                            class="fas fa-power-off"></i> Logout</a>
+                </nav>
+            </div>
+
+            <div class="col-md-10 p-4">
+                <div id="dashboard" class="page-section active">
+                    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
+                        <h2 class="text-dark m-0">Dashboard</h2>
+                        <div class="position-relative" style="width: 350px;">
+                            <div class="input-group"><span class="input-group-text bg-white"><i
+                                        class="fas fa-search text-primary"></i></span><input type="text"
+                                    id="dashboard-search" class="form-control" placeholder="Quick Search Items..."
+                                    autocomplete="off"></div>
+                            <div id="dashboard-search-results" class="item-list-container shadow"></div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-danger shadow-sm d-flex justify-content-between align-items-center"
+                        id="dash-alert-box" style="display:none !important;">
+                        <div class="d-flex align-items-center">
+                            <i class="fas fa-exclamation-triangle fa-2x me-3"></i>
+                            <div>
+                                <strong>Warning:</strong> You have <span id="dash-low-stock-count"
+                                    class="fw-bold fs-5">0</span> items with critically low stock!
+                                <a href="#" onclick="showLowStockModal()"
+                                    class="ms-3 fw-bold text-danger text-decoration-underline">View Items</a>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close"
+                            onclick="document.getElementById('dash-alert-box').style.setProperty('display','none','important')"></button>
+                    </div>
+
+                    <div class="row g-3">
+                        <div class="col-md-3">
+                            <div class="card bg-primary text-white shadow h-100">
+                                <div class="card-body d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h6 class="text-uppercase mb-1">Revenue</h6>
+                                        <h2 class="fw-bold mb-0" id="dash-sales">0</h2>
+                                    </div>
+                                    <div class="ms-3"><i class="fas fa-wallet fa-3x opacity-50"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-success text-white shadow h-100">
+                                <div class="card-body d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h6 class="text-uppercase mb-1">Invoices</h6>
+                                        <h2 class="fw-bold mb-0" id="dash-invoices">0</h2>
+                                    </div>
+                                    <div class="ms-3"><i class="fas fa-file-invoice fa-3x opacity-50"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-warning text-dark shadow h-100">
+                                <div class="card-body d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h6 class="text-uppercase mb-1">Items</h6>
+                                        <h2 class="fw-bold mb-0" id="dash-items">0</h2>
+                                    </div>
+                                    <div class="ms-3"><i class="fas fa-box-open fa-3x opacity-50"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="card bg-info text-white shadow h-100">
+                                <div class="card-body d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h6 class="text-uppercase mb-1">Customers</h6>
+                                        <h2 class="fw-bold mb-0" id="dash-customers">0</h2>
+                                    </div>
+                                    <div class="ms-3"><i class="fas fa-users fa-3x opacity-50"></i></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <div class="col-md-8">
+                            <div class="card shadow">
+                                <div class="card-header bg-white fw-bold">Sales Performance</div>
+                                <div class="card-body" style="height: 350px;"><canvas id="salesChart"></canvas></div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="card shadow bg-dark text-white text-center p-4 h-100">
+                                <h5 class="mb-4">Quick Actions</h5>
+                                <button onclick="showPage('create-invoice')"
+                                    class="btn btn-primary btn-lg mb-3 w-100 qa-btn" id="qa-new-invoice"><i
+                                        class="fas fa-plus-circle"></i> New Invoice</button>
+                                <button onclick="showPage('items')" class="btn btn-outline-light mb-3 w-100 qa-btn"
+                                    id="qa-add-item"><i class="fas fa-box"></i> Add Product</button>
+                                <button onclick="showPage('customers')" class="btn btn-outline-light w-100 qa-btn"
+                                    id="qa-add-cust"><i class="fas fa-user-plus"></i> Add Customer</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="create-invoice" class="page-section">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <button id="btn-back-to-list" class="btn btn-secondary btn-sm me-2" style="display:none;"
+                                onclick="showPage('view-invoices')"><i class="fas fa-arrow-left"></i> Back</button>
+                            <span class="h3 fw-bold" id="page-title">New Invoice</span>
+                            <small class="text-muted ms-2 d-none d-md-inline">Shortcuts: Ctrl+N (New), Ctrl+S (Save),
+                                Ctrl+P (Print)</small>
+                        </div>
+                        <div class="badge bg-secondary fs-6" id="inv-display-no"></div>
+                    </div>
+                    <div class="card shadow p-4 bg-white border-0">
+                        <div class="row mb-3">
+                            <div class="col-md-4"><label class="text-muted small fw-bold">Customer</label>
+                                <div class="input-group"><select id="inv-customer" class="form-select"></select><button
+                                        class="btn btn-outline-primary" onclick="showPage('customers')"><i
+                                            class="fas fa-plus"></i></button></div>
+                            </div>
+                            <div class="col-md-4"><label class="text-muted small fw-bold">Date</label><input type="date"
+                                    id="inv-date" class="form-control"></div>
+                            <div class="col-md-4"><label class="text-muted small fw-bold">No</label><input type="text"
+                                    id="inv-no" class="form-control fw-bold bg-light" readonly></div>
+                        </div>
+                        <div class="position-relative mb-3"><input type="text" id="product-search"
+                                class="form-control form-control-lg" placeholder="Search product to add..."
+                                autocomplete="off">
+                            <div id="product-list" class="item-list-container shadow"></div>
+                        </div>
+                        <table class="table table-bordered align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="40%">Item / Description</th>
+                                    <th width="15%">Price</th>
+                                    <th width="10%">Qty</th>
+                                    <th width="15%">Total</th>
+                                    <th width="5%">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="inv-items-body"></tbody>
+                        </table>
+                        <div class="row justify-content-end mb-4">
+                            <div class="col-md-4">
+                                <table class="table table-sm table-borderless">
+                                    <tr>
+                                        <td>Subtotal:</td>
+                                        <td class="text-end fw-bold" id="inv-subtotal">0.00</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Discount (%):</td>
+                                        <td class="text-end"><input type="number" id="inv-discount-per"
+                                                class="form-control form-control-sm text-end" value="0"
+                                                oninput="calcInvoiceFinal()"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Tax (%):</td>
+                                        <td class="text-end"><input type="number" id="inv-tax"
+                                                class="form-control form-control-sm text-end" value="0"
+                                                oninput="calcInvoiceFinal()"></td>
+                                    </tr>
+                                    <tr>
+                                        <td>Service Charge:</td>
+                                        <td class="text-end"><input type="number" id="inv-service"
+                                                class="form-control form-control-sm text-end" value="0"
+                                                oninput="calcInvoiceFinal()"></td>
+                                    </tr>
+                                    <tr class="border-top">
+                                        <td class="h5">Total:</td>
+                                        <td class="text-end h5 fw-bold text-primary">PKR <span
+                                                id="inv-grand-total">0.00</span></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button id="btn-save-quote" onclick="saveQuotation()"
+                                class="btn btn-info text-white btn-lg"><i class="fas fa-file-contract"></i> Save
+                                Quote</button>
+                            <button id="btn-save-inv" onclick="saveInvoice()" class="btn btn-success btn-lg"><i
+                                    class="fas fa-print"></i> Save & Print</button>
+                            <!-- <button onclick="window.print()" class="btn btn-dark btn-lg"><i class="fas fa-file-pdf"></i> Print Only</button> -->
+                        </div>
+                    </div>
+                </div>
+
+                <div id="items" class="page-section">
+                    <h3>Items Manager</h3>
+                    <div class="card p-3 mb-3 shadow-sm border-0">
+                        <form id="item-form" class="row g-2">
+                            <div class="col-md-3"><input type="text" id="item-name" class="form-control"
+                                    placeholder="Item Name" required></div>
+                            <div class="col-md-3"><input type="text" id="item-desc" class="form-control"
+                                    placeholder="Description"></div>
+                            <div class="col-md-2"><select id="item-unit" class="form-select">
+                                    <option value="Pc">Pc</option>
+                                    <option value="Kg">Kg</option>
+                                    <option value="Meter">Meter</option>
+                                    <option value="Roll">Roll</option>
+                                    <option value="Box">Box</option>
+                                    <option value="Pkt">Pkt</option>
+                                    <option value="Ft">Ft</option>
+                                </select></div>
+                            <div class="col-md-2"><input type="number" id="item-price" class="form-control"
+                                    placeholder="Price" required></div>
+                            <div class="col-md-1"><input type="number" id="item-stock" class="form-control"
+                                    placeholder="Qty"></div>
+                            <div class="col-md-1"><button type="submit" class="btn btn-primary w-100"><i
+                                        class="fas fa-plus"></i></button></div>
+                        </form>
+                    </div>
+                    <div class="card shadow-sm border-0">
+                        <table class="table table-hover mb-0">
+                            <tbody id="items-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="customers" class="page-section">
+                    <h3>Customers</h3>
+                    <div class="card p-3 mb-3 shadow-sm border-0">
+                        <form id="customer-form" class="row g-2">
+                            <div class="col-md-3"><input type="text" id="cust-name" class="form-control"
+                                    placeholder="Name" required></div>
+                            <div class="col-md-3"><input type="text" id="cust-phone" class="form-control"
+                                    placeholder="Phone"></div>
+                            <div class="col-md-3"><input type="text" id="cust-email" class="form-control"
+                                    placeholder="Email"></div>
+                            <div class="col-md-2"><input type="text" id="cust-addr" class="form-control"
+                                    placeholder="Address"></div>
+                            <div class="col-md-1"><button type="submit" class="btn btn-primary w-100"><i
+                                        class="fas fa-plus"></i></button></div>
+                        </form>
+                    </div>
+                    <div class="card shadow-sm border-0">
+                        <table class="table table-hover mb-0">
+                            <tbody id="cust-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="settings" class="page-section">
+                    <h3>Company Settings</h3>
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="card p-4 shadow-sm border-0 mb-3">
+                                <div class="mb-3"><label>Company Name</label><input type="text" id="set-name"
+                                        class="form-control"></div>
+                                <div class="mb-3"><label>Address</label><input type="text" id="set-addr"
+                                        class="form-control"></div>
+                                <div class="mb-3"><label>Phone</label><input type="text" id="set-phone"
+                                        class="form-control"></div>
+                                <div class="mb-3"><label>Email</label><input type="email" id="set-email"
+                                        class="form-control"></div>
+                                <div class="mb-3"><label>Terms & Conditions</label><textarea id="set-terms"
+                                        class="form-control" rows="5"></textarea></div>
+                                <div class="mb-3"><label>Upload Logo</label><input type="file" id="set-logo-input"
+                                        class="form-control" accept="image/*"></div>
+                                <button onclick="saveSettings()" class="btn btn-primary w-100">Save Settings</button>
+                            </div>
+                            <div class="card p-3 shadow-sm border-0 bg-light">
+                                <h5>Data Management</h5>
+                                <div class="d-flex gap-2">
+                                    <button
+                                        onclick="window.api.backupDatabase().then(ok => ok && alert('Backup Success!'))"
+                                        class="btn btn-outline-dark flex-grow-1">
+                                        <i class="fas fa-download"></i> Backup DB
+                                    </button>
+
+                                    <button onclick="confirmRestore()" class="btn btn-danger text-white flex-grow-1">
+                                        <i class="fas fa-upload"></i> Import/Restore DB
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 text-center">
+                            <h5>Logo Preview</h5><img id="set-logo-preview" class="img-thumbnail"
+                                style="max-height: 150px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="users" class="page-section">
+                    <h3>User Management</h3>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="card p-3 shadow-sm border-0">
+                                <form id="user-form">
+                                    <div class="mb-2"><input type="text" id="new-user" class="form-control"
+                                            placeholder="Username" required></div>
+                                    <div class="mb-2"><input type="password" id="new-pass" class="form-control"
+                                            placeholder="Password" required></div>
+                                    <div class="mb-2"><select id="new-role" class="form-select"
+                                            onchange="togglePermissions()">
+                                            <option value="operator">Operator</option>
+                                            <option value="admin">Admin</option>
+                                        </select></div>
+                                    <div id="permissions-container" class="mb-2 border p-2 bg-light rounded">
+                                        <div class="form-check form-switch"><input class="form-check-input"
+                                                type="checkbox" id="perm-invoice" checked><label>Invoices</label></div>
+                                        <div class="form-check form-switch"><input class="form-check-input"
+                                                type="checkbox" id="perm-items"><label>Items</label></div>
+                                        <div class="form-check form-switch"><input class="form-check-input"
+                                                type="checkbox" id="perm-customers"><label>Customers</label></div>
+                                        <div class="form-check form-switch"><input class="form-check-input"
+                                                type="checkbox" id="perm-settings"><label>Settings</label></div>
+                                    </div>
+                                    <button type="submit" class="btn btn-primary w-100">Add User</button>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="col-md-8">
+                            <div class="card shadow-sm border-0">
+                                <table class="table">
+                                    <tbody id="users-table-body"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="logs" class="page-section">
+                    <h3>Activity Logs</h3>
+                    <div class="card shadow-sm border-0">
+                        <table class="table table-sm table-striped">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Time</th>
+                                    <th>User</th>
+                                    <th>Action</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody id="logs-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="quotations" class="page-section">
+                    <h3>Quotations / Estimates</h3>
+                    <div class="card shadow-sm border-0">
+                        <table class="table table-striped mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Quote No</th>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th class="text-center">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody id="quotations-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="view-invoices" class="page-section">
+                    <div class="d-flex justify-content-between mb-2">
+                        <h3>All Invoices</h3><button
+                            onclick="window.api.exportInvoices().then(ok => ok && alert('Exported!'))"
+                            class="btn btn-success"><i class="fas fa-file-excel"></i> Export CSV</button>
+                    </div>
+                    <div class="card shadow-sm border-0">
+                        <table class="table table-striped mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Inv No</th>
+                                    <th>Date</th>
+                                    <th>Customer</th>
+                                    <th>Total</th>
+                                    <th class="text-center">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="all-invoices-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="printable-area">
+        <div class="print-header-row">
+            <div class="ph-left">
+                <div id="print-company-name" class="company-title">Company Name</div>
+                <div class="company-details"><span id="print-company-addr">Address</span><br>Phone: <span
+                        id="print-company-phone"></span><br>Email: <span id="print-company-email"></span></div>
+            </div>
+            <div class="ph-right"><img id="print-logo" src="" alt="Logo" style="max-height: 80px;"></div>
+        </div>
+        <div class="top-divider"></div>
+        <div class="invoice-heading" id="print-heading">INVOICE</div>
+        <div class="info-grid">
+            <div class="info-left">
+                <div class="label-bold">Estimate For:</div>
+                <div id="print-cust-name" class="cust-name">Walk-in Customer</div>
+                <div id="print-cust-details" style="font-size:10pt;"></div>
+            </div>
+            <div class="info-right">
+                <div class="label-bold" style="margin-bottom: 5px;">Details</div>
+                <div class="meta-line">No.: <span id="print-inv-no" class="meta-val"></span></div>
+                <div class="meta-line">Date: <span id="print-date" class="meta-val"></span></div>
+                <div class="meta-line">Time: <span id="print-time" class="meta-val"></span></div>
+            </div>
+        </div>
+        <table class="blue-table">
+            <thead>
+                <tr>
+                    <th class="col-sr">SR#</th>
+                    <th class="col-item">ITEM NAME</th>
+                    <th class="col-qty">QTY</th>
+                    <th class="col-unit">UNIT</th>
+                    <th class="col-price">PRICE/UNIT</th>
+                    <th class="col-amt">AMOUNT</th>
+                </tr>
+            </thead>
+            <tbody id="print-table-body"></tbody>
+            <tfoot>
+                <tr class="row-summary">
+                    <td colspan="2" style="text-align: right; border-right: none;">Total</td>
+                    <td style="text-align: center; border-left: none;"><span id="print-total-qty">0</span></td>
+                    <td></td>
+                    <td></td>
+                    <td style="text-align: right;"><span id="print-table-total">0.00</span></td>
+                </tr>
+            </tfoot>
+        </table>
+        <div class="bottom-grid">
+            <div class="bg-left">
+                <div class="amount-words-label">Amount In Words:</div>
+                <div id="print-words" class="amount-words-text">Zero Rupees Only</div>
+                <div class="terms-section">
+                    <h6>Terms and Conditions</h6>
+                    <div id="print-terms-list"></div>
+                </div>
+            </div>
+            <div class="bg-right">
+                <table class="totals-box">
+                    <tr>
+                        <td class="t-label">Sub Total</td>
+                        <td class="t-val"><span id="print-subtotal">0.00</span></td>
+                    </tr>
+                    <tr id="print-discount-row" style="display:none;">
+                        <td class="t-label">Discount</td>
+                        <td class="t-val text-danger"><span id="print-discount">0</span></td>
+                    </tr>
+                    <tr id="print-tax-row" style="display:none;">
+                        <td class="t-label">Tax</td>
+                        <td class="t-val"><span id="print-tax">0</span></td>
+                    </tr>
+                    <tr id="print-service-row" style="display:none;">
+                        <td class="t-label">Service</td>
+                        <td class="t-val"><span id="print-service">0</span></td>
+                    </tr>
+                    <tr class="final-row">
+                        <td class="t-label" style="border:none;">Total</td>
+                        <td class="t-val" style="border:none;"><span id="print-grand-total">0.00</span></td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="lowStockModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title"><i class="fas fa-exclamation-triangle"></i> Low Stock Items</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <ul class="list-group" id="low-stock-list"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="editModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit</h5><button type="button" class="btn-close"
+                        data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="edit-modal-body"></div>
+                <div class="modal-footer"><button type="button" class="btn btn-primary" id="save-edit-btn">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="renderer.js"></script>
+</body>
+
+</html>
