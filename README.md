@@ -2,25 +2,17 @@
 A powerful, secure, and mobile-friendly Invoice & Inventory Management System built with Node.js and SQLite. Designed for small businesses to manage sales, stock, and customers from anywhere using a web browser.
 
 🚀 Key Features
-📊 Dashboard: Real-time sales overview, revenue stats, and sales charts.
-
-🧾 Invoicing: Create professional invoices with Tax, Discount, and Service Charges.
-
-📝 Quotations: Generate estimates and convert them to invoices with one click.
-
-📦 Inventory Management: Track stock levels with Low Stock Alerts.
-
-🛑 Strict Stock Mode: Optional setting to prevent selling items out of stock.
-
-📱 Mobile Ready: Fully responsive design works on Phones, Tablets, and Laptops.
-
-💬 WhatsApp Integration: Send invoice details directly to customers via WhatsApp.
-
-👥 User Roles: Admin (Full Access) and Operator (Restricted Access) roles.
-
-💾 Data Safety: Manual Database Backup & Restore + CSV Export.
-
-🖨️ Print Layout: Professional Navy Blue print template for thermal or A4 printers.
+🧾 Professional invoice system
+📦 Inventory
+👥 Customers
+💰 Payments/balances
+📊 Dashboard
+📝 Quotations → invoices
+📱 Responsive/mobile UI
+💬 WhatsApp integration
+👤 Admin/operator roles
+💾 SQLite backup/restore
+🖨️ A4/thermal printing
 
 🛠️ Tech Stack
 Backend: Node.js, Express.js
@@ -42,13 +34,16 @@ Install Git.
 2. Clone & Install
 Bash
 # Clone this repository
-git clone https://github.com/YOUR_USERNAME/trustsafe-invoice-manager.git
+git clone https://github.com/mianwerad007/trust-safe-services-invoice-manager.git  
+
+i awnt to amke some updation in  gtis please help now check th e git hub repo and tell can yoyu do this dirrectly?\
 
 # Go into the folder
 cd trustsafe-invoice-manager
 
 # Install dependencies
 npm install
+npm run
 3. Run the App
 Bash
 node index.js
@@ -91,16 +86,6 @@ Build Command: npm install
 
 Start Command: node index.js
 
-📂 Project Structure
-├── public/              # Frontend Files
-│   ├── index.html       # Main UI
-│   ├── renderer.js      # App Logic
-│   ├── api-adapter.js   # Bridge between UI and Server
-│   └── favicon.png      # App Icon
-├── database.js          # Database Schema & Setup
-├── index.js             # Main Server (Express App)
-├── package.json         # Project Dependencies
-└── README.md            # Documentation
 
 📝 License
 This project is created for TrustSafe Services. Developed by Muhammad Werad.
