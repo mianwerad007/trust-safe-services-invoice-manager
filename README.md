@@ -1,4 +1,5 @@
-**🛡️ TrustSafe Invoice Manager (Web Edition)**
+# 🛡️ TrustSafe Invoice Manager (Web Edition)
+
 A powerful, secure, and mobile-friendly Invoice & Inventory Management System built with Node.js and SQLite. Designed for small businesses to manage sales, stock, and customers from anywhere using a web browser.
 
 🚀 Key Features
