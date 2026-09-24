@@ -102,12 +102,66 @@ ipcMain.handle('delete-customer', (e, {id, user}) => new Promise(resolve => db.r
 
 // 4. Items
 ipcMain.handle('get-items', () => new Promise(resolve => db.all("SELECT * FROM items ORDER BY id DESC", (err, rows) => resolve(rows))));
-ipcMain.handle('add-item', (e, d) => new Promise(resolve => db.run("INSERT INTO items (name, description, unit, price, stock) VALUES (?,?,?,?,?)", [d.name, d.desc, d.unit, d.price, d.stock], function() { resolve(this.lastID); })));
-ipcMain.handle('update-item', (e, d) => new Promise(resolve => db.run("UPDATE items SET name=?, description=?, unit=?, price=?, stock=? WHERE id=?", [d.name, d.desc, d.unit, d.price, d.stock, d.id], () => resolve(true))));
+ipcMain.handle('add-item', (e, d) => new Promise(resolve => db.run("INSERT INTO items (name, description, unit, price, stock, image) VALUES (?,?,?,?,?,?)", [d.name, d.desc, d.unit, d.price, d.stock, d.image || null], function() { resolve(this.lastID); })));
+ipcMain.handle('update-item', (e, d) => new Promise(resolve => db.run("UPDATE items SET name=?, description=?, unit=?, price=?, stock=?, image=? WHERE id=?", [d.name, d.desc, d.unit, d.price, d.stock, d.image || null, d.id], () => resolve(true))));
 ipcMain.handle('delete-item', (e, {id, user}) => new Promise(resolve => db.run("DELETE FROM items WHERE id=?", [id], () => {
     logActivity(user, 'Delete Item', `Deleted item ID: ${id}`);
     resolve(true);
 })));
+
+// 4b. NEW: Services (labour / installation / non-stock charges)
+ipcMain.handle('get-services', () => new Promise(resolve => db.all("SELECT * FROM services ORDER BY id DESC", (err, rows) => resolve(rows))));
+ipcMain.handle('add-service', (e, d) => new Promise(resolve => db.run("INSERT INTO services (name, description, price) VALUES (?,?,?)", [d.name, d.desc, d.price], function() { resolve(this.lastID); })));
+ipcMain.handle('update-service', (e, d) => new Promise(resolve => db.run("UPDATE services SET name=?, description=?, price=? WHERE id=?", [d.name, d.desc, d.price, d.id], () => resolve(true))));
+ipcMain.handle('delete-service', (e, {id, user}) => new Promise(resolve => db.run("DELETE FROM services WHERE id=?", [id], () => {
+    logActivity(user, 'Delete Service', `Deleted service ID: ${id}`);
+    resolve(true);
+})));
+
+// 4c. NEW: Product Groups / Bundles (e.g. "CCTV 4 Channel Kit" made up of several items)
+ipcMain.handle('get-groups', () => new Promise(resolve => {
+    db.all("SELECT * FROM product_groups ORDER BY id DESC", (err, groups) => {
+        if (!groups || groups.length === 0) return resolve([]);
+        let remaining = groups.length;
+        groups.forEach(g => {
+            db.all(
+                `SELECT pgi.item_id, pgi.qty, items.name, items.price, items.unit, items.stock
+                 FROM product_group_items pgi LEFT JOIN items ON items.id = pgi.item_id
+                 WHERE pgi.group_id = ?`,
+                [g.id],
+                (e2, rows) => {
+                    g.items = rows || [];
+                    remaining--;
+                    if (remaining === 0) resolve(groups);
+                }
+            );
+        });
+    });
+}));
+ipcMain.handle('save-group', (e, d) => new Promise(resolve => {
+    db.run("INSERT INTO product_groups (name, description) VALUES (?,?)", [d.name, d.description], function (err) {
+        if (err) return resolve(false);
+        const groupId = this.lastID;
+        const stmt = db.prepare("INSERT INTO product_group_items (group_id, item_id, qty) VALUES (?,?,?)");
+        (d.items || []).forEach(i => stmt.run(groupId, i.id, i.qty));
+        stmt.finalize(() => resolve(groupId));
+    });
+}));
+ipcMain.handle('update-group', (e, d) => new Promise(resolve => {
+    db.run("UPDATE product_groups SET name=?, description=? WHERE id=?", [d.name, d.description, d.id], (err) => {
+        if (err) return resolve(false);
+        db.run("DELETE FROM product_group_items WHERE group_id=?", [d.id], () => {
+            const stmt = db.prepare("INSERT INTO product_group_items (group_id, item_id, qty) VALUES (?,?,?)");
+            (d.items || []).forEach(i => stmt.run(d.id, i.id, i.qty));
+            stmt.finalize(() => resolve(true));
+        });
+    });
+}));
+ipcMain.handle('delete-group', (e, id) => new Promise(resolve => {
+    db.run("DELETE FROM product_group_items WHERE group_id=?", [id], () => {
+        db.run("DELETE FROM product_groups WHERE id=?", [id], () => resolve(true));
+    });
+}));
 
 // 5. Invoices (Updated for Tax/Service)
 ipcMain.handle('get-last-invoice', () => new Promise(resolve => db.get("SELECT invoice_no FROM invoices ORDER BY id DESC LIMIT 1", (err, row) => resolve(row))));
@@ -118,12 +172,20 @@ ipcMain.handle('save-invoice', (e, data) => new Promise((resolve) => {
         function(err) {
             if(err) { console.log(err); resolve(false); return; }
             const invId = this.lastID;
-            const insertItem = db.prepare("INSERT INTO invoice_items (invoice_id, item_name, description, qty, price, total) VALUES (?,?,?,?,?,?)");
+            const insertItem = db.prepare("INSERT INTO invoice_items (invoice_id, item_name, description, qty, price, total, group_components) VALUES (?,?,?,?,?,?,?)");
             const updateStock = db.prepare("UPDATE items SET stock = stock - ? WHERE id = ?");
 
             data.items.forEach(i => {
-                insertItem.run(invId, i.name, i.desc, i.qty, i.price, i.total);
-                if(i.id) updateStock.run(i.qty, i.id);
+                const qty = parseFloat(i.qty) || 0;
+                const compJson = (i.components && i.components.length) ? JSON.stringify(i.components) : null;
+                insertItem.run(invId, i.name, i.desc, qty, i.price, i.total, compJson);
+
+                // CHANGED: a "group/kit" line deducts stock from each of its component items instead of itself
+                if (i.components && i.components.length) {
+                    i.components.forEach(c => { if (c.id) updateStock.run((parseFloat(c.qty) || 0) * qty, c.id); });
+                } else if (i.id) {
+                    updateStock.run(qty, i.id);
+                }
             });
 
             insertItem.finalize();
@@ -164,8 +226,11 @@ ipcMain.handle('save-quotation', (e, data) => new Promise((resolve) => {
         function(err) {
             if(err) { resolve(false); return; }
             const qId = this.lastID;
-            const insertItem = db.prepare("INSERT INTO quotation_items (quotation_id, item_name, description, qty, price, total) VALUES (?,?,?,?,?,?)");
-            data.items.forEach(i => insertItem.run(qId, i.name, i.desc, i.qty, i.price, i.total));
+            const insertItem = db.prepare("INSERT INTO quotation_items (quotation_id, item_name, description, qty, price, total, group_components) VALUES (?,?,?,?,?,?,?)");
+            data.items.forEach(i => {
+                const compJson = (i.components && i.components.length) ? JSON.stringify(i.components) : null;
+                insertItem.run(qId, i.name, i.desc, i.qty, i.price, i.total, compJson);
+            });
             insertItem.finalize();
             logActivity(data.user, 'Create Quotation', `Created Quote #${data.quotation_no}`);
             resolve(qId);

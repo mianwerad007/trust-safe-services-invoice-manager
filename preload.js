@@ -17,6 +17,18 @@ contextBridge.exposeInMainWorld('api', {
     addItem: (data) => ipcRenderer.invoke('add-item', data),
     updateItem: (data) => ipcRenderer.invoke('update-item', data),
     deleteItem: (data) => ipcRenderer.invoke('delete-item', data),
+
+    // --- NEW: Services (non-stock charges like labour/installation) ---
+    getServices: () => ipcRenderer.invoke('get-services'),
+    addService: (data) => ipcRenderer.invoke('add-service', data),
+    updateService: (data) => ipcRenderer.invoke('update-service', data),
+    deleteService: (data) => ipcRenderer.invoke('delete-service', data),
+
+    // --- NEW: Product Groups / Bundles ---
+    getGroups: () => ipcRenderer.invoke('get-groups'),
+    saveGroup: (data) => ipcRenderer.invoke('save-group', data),
+    updateGroup: (data) => ipcRenderer.invoke('update-group', data),
+    deleteGroup: (id) => ipcRenderer.invoke('delete-group', id),
     
     getLastInvoice: () => ipcRenderer.invoke('get-last-invoice'),
     saveInvoice: (data) => ipcRenderer.invoke('save-invoice', data),

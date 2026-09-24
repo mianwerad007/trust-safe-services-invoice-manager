@@ -110,7 +110,7 @@
         @media print {
             @page {
                 size: A4;
-                margin: 1cm;
+                margin: 0.7cm;
             }
 
             .sidebar,
@@ -141,7 +141,7 @@
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
-                margin-bottom: 10px;
+                margin-bottom: 6px;
             }
 
             .ph-left {
@@ -154,37 +154,37 @@
             }
 
             .company-title {
-                font-size: 24pt;
+                font-size: 16pt;
                 font-weight: bold;
                 color: #1a2d5c;
-                margin-bottom: 5px;
+                margin-bottom: 2px;
             }
 
             .company-details {
-                font-size: 10pt;
-                line-height: 1.4;
+                font-size: 8pt;
+                line-height: 1.25;
                 color: #333;
             }
 
             .top-divider {
-                border-bottom: 3px solid #1a2d5c;
-                margin: 10px 0 20px 0;
+                border-bottom: 2px solid #1a2d5c;
+                margin: 4px 0 8px 0;
             }
 
             .invoice-heading {
                 text-align: center;
-                font-size: 24pt;
+                font-size: 14pt;
                 font-weight: bold;
                 color: #1a2d5c;
                 text-transform: uppercase;
-                margin-bottom: 30px;
-                letter-spacing: 2px;
+                margin-bottom: 8px;
+                letter-spacing: 1px;
             }
 
             .info-grid {
                 display: flex;
                 justify-content: space-between;
-                margin-bottom: 20px;
+                margin-bottom: 8px;
             }
 
             .info-left {
@@ -198,20 +198,20 @@
 
             .label-bold {
                 font-weight: bold;
-                font-size: 11pt;
+                font-size: 9pt;
                 color: #333;
-                margin-bottom: 5px;
+                margin-bottom: 2px;
             }
 
             .cust-name {
-                font-size: 16pt;
+                font-size: 12pt;
                 font-weight: bold;
-                margin-bottom: 5px;
+                margin-bottom: 2px;
             }
 
             .meta-line {
-                font-size: 10pt;
-                margin-bottom: 3px;
+                font-size: 8pt;
+                margin-bottom: 1px;
             }
 
             .meta-val {
@@ -221,23 +221,106 @@
             .blue-table {
                 width: 100%;
                 border-collapse: collapse;
-                margin-bottom: 5px;
-                font-size: 10pt;
+                margin-bottom: 3px;
+                font-size: 8.5pt;
             }
 
             .blue-table th {
                 background-color: #1a2d5c !important;
                 color: white !important;
-                padding: 10px 5px;
+                padding: 4px 4px;
                 text-align: center;
                 text-transform: uppercase;
                 border: 1px solid #000;
+                font-size: 8pt;
             }
 
             .blue-table td {
-                padding: 8px 5px;
+                padding: 3px 4px;
                 border: 1px solid #000;
                 vertical-align: middle;
+                line-height: 1.2;
+            }
+
+            /* CHANGED: shrink item name/description further so more rows fit */
+            .col-item b {
+                font-size: 8.5pt;
+            }
+
+            .col-item i {
+                font-size: 7.5pt !important;
+            }
+
+            /* CHANGED: optional product photo + badge shown on the printed line */
+            .item-cell {
+                display: flex;
+                align-items: center;
+                gap: 5px;
+            }
+
+            .print-item-photo {
+                width: 24px;
+                height: 24px;
+                object-fit: cover;
+                border-radius: 3px;
+                border: 1px solid #999;
+                flex-shrink: 0;
+            }
+
+            .print-badge {
+                display: inline-block;
+                font-size: 6.5pt;
+                font-weight: bold;
+                padding: 1px 4px;
+                border-radius: 3px;
+                color: #fff;
+                margin-right: 3px;
+                vertical-align: middle;
+            }
+
+            .print-badge.kit { background: #1a2d5c; }
+            .print-badge.service { background: #6c757d; }
+
+            #printable-area.ultra-compact .print-item-photo {
+                width: 15px;
+                height: 15px;
+            }
+
+            /* CHANGED: auto-compact mode - applied by JS when an invoice has many line items,
+               so 15-20+ items still fit cleanly on a single A4 page */
+            #printable-area.ultra-compact .blue-table {
+                font-size: 7.5pt;
+            }
+
+            #printable-area.ultra-compact .blue-table th {
+                padding: 3px 3px;
+                font-size: 7pt;
+            }
+
+            #printable-area.ultra-compact .blue-table td {
+                padding: 1.5px 3px;
+                line-height: 1.05;
+            }
+
+            #printable-area.ultra-compact .col-item b {
+                font-size: 7.5pt;
+            }
+
+            #printable-area.ultra-compact .col-item i {
+                font-size: 6.5pt !important;
+            }
+
+            #printable-area.ultra-compact .company-title {
+                font-size: 13pt;
+            }
+
+            #printable-area.ultra-compact .invoice-heading {
+                font-size: 12pt;
+                margin-bottom: 5px;
+            }
+
+            #printable-area.ultra-compact .info-grid {
+                margin-bottom: 5px;
             }
 
             .col-sr {
@@ -288,12 +371,12 @@
             .bottom-grid {
                 display: flex;
                 justify-content: space-between;
-                margin-top: 20px;
+                margin-top: 8px;
             }
 
             .bg-left {
                 width: 60%;
-                padding-right: 20px;
+                padding-right: 15px;
             }
 
             .bg-right {
@@ -302,33 +385,33 @@
 
             .amount-words-label {
                 font-weight: bold;
-                font-size: 11pt;
-                margin-bottom: 5px;
+                font-size: 9pt;
+                margin-bottom: 2px;
                 color: #333;
             }
 
             .amount-words-text {
                 font-style: italic;
-                font-size: 11pt;
+                font-size: 9pt;
                 text-transform: uppercase;
-                margin-bottom: 20px;
+                margin-bottom: 8px;
                 color: #444;
             }
 
             .terms-section h6 {
                 font-weight: bold;
-                font-size: 11pt;
-                margin-bottom: 5px;
+                font-size: 9pt;
+                margin-bottom: 3px;
             }
 
             .terms-section ul {
-                padding-left: 20px;
+                padding-left: 16px;
                 margin: 0;
-                font-size: 9pt;
+                font-size: 7.5pt;
             }
 
             .terms-section li {
-                margin-bottom: 3px;
+                margin-bottom: 1px;
             }
 
             .totals-box {
@@ -337,9 +420,9 @@
             }
 
             .totals-box td {
-                padding: 8px;
+                padding: 3px 6px;
                 border: 1px solid #000;
-                font-size: 11pt;
+                font-size: 9pt;
                 font-weight: bold;
             }
 
@@ -395,6 +478,9 @@
                         Quotations</a>
                     <a href="#" id="nav-items" onclick="showPage('items')"><i class="fas fa-box-open"></i> Items
                         Manager</a>
+                    <a href="#" id="nav-groups" onclick="showPage('groups')"><i class="fas fa-boxes-stacked"></i> Bundles
+                        / Groups</a>
+                    <a href="#" id="nav-services" onclick="showPage('services')"><i class="fas fa-screwdriver-wrench"></i> Services</a>
                     <a href="#" id="nav-customers" onclick="showPage('customers')"><i class="fas fa-users"></i>
                         Customers</a>
                     <a href="#" id="nav-history" onclick="showPage('view-invoices')"><i class="fas fa-list"></i> All
@@ -528,10 +614,22 @@
                             <div class="col-md-4"><label class="text-muted small fw-bold">No</label><input type="text"
                                     id="inv-no" class="form-control fw-bold bg-light" readonly></div>
                         </div>
-                        <div class="position-relative mb-3"><input type="text" id="product-search"
+                        <div class="position-relative mb-2"><input type="text" id="product-search"
                                 class="form-control form-control-lg" placeholder="Search product to add..."
                                 autocomplete="off">
                             <div id="product-list" class="item-list-container shadow"></div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-md-6 position-relative"><input type="text" id="group-search"
+                                    class="form-control" placeholder="Search bundle / group to add (adds all items at once)..."
+                                    autocomplete="off">
+                                <div id="group-list" class="item-list-container shadow"></div>
+                            </div>
+                            <div class="col-md-6 position-relative"><input type="text" id="service-search"
+                                    class="form-control" placeholder="Search service to add..."
+                                    autocomplete="off">
+                                <div id="service-list" class="item-list-container shadow"></div>
+                            </div>
                         </div>
                         <table class="table table-bordered align-middle">
                             <thead class="table-light">
@@ -590,12 +688,20 @@
                 </div>
 
                 <div id="items" class="page-section">
-                    <h3>Items Manager</h3>
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+                        <h3 class="mb-0">Items Manager</h3>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" onclick="downloadItemsTemplate()"><i class="fas fa-file-download"></i> Template</button>
+                            <button type="button" class="btn btn-outline-success btn-sm" onclick="exportItemsCSV()"><i class="fas fa-file-export"></i> Export CSV</button>
+                            <button type="button" class="btn btn-outline-primary btn-sm" onclick="document.getElementById('items-import-input').click()"><i class="fas fa-file-import"></i> Import CSV</button>
+                            <input type="file" id="items-import-input" accept=".csv" style="display:none" onchange="importItemsCSV(event)">
+                        </div>
+                    </div>
                     <div class="card p-3 mb-3 shadow-sm border-0">
-                        <form id="item-form" class="row g-2">
-                            <div class="col-md-3"><input type="text" id="item-name" class="form-control"
+                        <form id="item-form" class="row g-2 align-items-center">
+                            <div class="col-md-2"><input type="text" id="item-name" class="form-control"
                                     placeholder="Item Name" required></div>
-                            <div class="col-md-3"><input type="text" id="item-desc" class="form-control"
+                            <div class="col-md-2"><input type="text" id="item-desc" class="form-control"
                                     placeholder="Description"></div>
                             <div class="col-md-2"><select id="item-unit" class="form-select">
                                     <option value="Pc">Pc</option>
@@ -610,13 +716,77 @@
                                     placeholder="Price" required></div>
                             <div class="col-md-1"><input type="number" id="item-stock" class="form-control"
                                     placeholder="Qty"></div>
+                            <div class="col-md-2 d-flex align-items-center gap-2">
+                                <img id="item-img-preview" src="" style="display:none;width:36px;height:36px;object-fit:cover;border-radius:4px;border:1px solid #ddd;">
+                                <label class="btn btn-outline-secondary btn-sm mb-0" style="cursor:pointer;" title="Optional product photo">
+                                    <i class="fas fa-camera"></i>
+                                    <input type="file" id="item-img-input" accept="image/*" style="display:none" onchange="previewItemImage(this, 'item-img-preview')">
+                                </label>
+                            </div>
                             <div class="col-md-1"><button type="submit" class="btn btn-primary w-100"><i
                                         class="fas fa-plus"></i></button></div>
                         </form>
                     </div>
                     <div class="card shadow-sm border-0">
+                        <div class="p-2 border-bottom">
+                            <input type="text" id="items-search" class="form-control form-control-sm" placeholder="Search items by name or description..." oninput="renderItemsTable()">
+                        </div>
                         <table class="table table-hover mb-0">
+                            <thead>
+                                <tr><th></th><th>#</th><th>Name</th><th>Description</th><th>Unit</th><th>Price</th><th>Stock</th><th>Actions</th></tr>
+                            </thead>
                             <tbody id="items-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="groups" class="page-section">
+                    <h3>Bundles / Groups</h3>
+                    <p class="text-muted small">Combine multiple items into one reusable kit (e.g. "CCTV 4 Channel Camera Kit"). Adding a group to an invoice/quotation adds it as a single line and automatically deducts stock for every item inside it.</p>
+                    <div class="card p-3 mb-3 shadow-sm border-0">
+                        <div class="row g-2 mb-2">
+                            <div class="col-md-4"><input type="text" id="group-name" class="form-control" placeholder="Group / Kit Name (e.g. CCTV 4 Channel Kit)"></div>
+                            <div class="col-md-8"><input type="text" id="group-desc" class="form-control" placeholder="Description (optional)"></div>
+                        </div>
+                        <div class="position-relative mb-2">
+                            <input type="text" id="group-component-search" class="form-control" placeholder="Search item to add into this kit..." autocomplete="off">
+                            <div id="group-component-list" class="item-list-container shadow"></div>
+                        </div>
+                        <table class="table table-sm table-bordered mb-2">
+                            <thead class="table-light"><tr><th>Item</th><th style="width:110px;">Qty</th><th style="width:120px;">Price/unit</th><th style="width:50px;"></th></tr></thead>
+                            <tbody id="group-builder-body"><tr id="group-builder-empty"><td colspan="4" class="text-center text-muted">No items added yet. Search above to add items into this kit.</td></tr></tbody>
+                        </table>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div class="fw-bold">Kit Total (per set): PKR <span id="group-builder-total">0.00</span></div>
+                            <div>
+                                <button type="button" class="btn btn-secondary btn-sm" id="group-cancel-edit-btn" style="display:none;" onclick="resetGroupBuilder()">Cancel Edit</button>
+                                <button type="button" class="btn btn-primary" id="group-save-btn" onclick="saveGroupForm()"><i class="fas fa-save"></i> Save Kit</button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card shadow-sm border-0">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Name</th><th>Contains</th><th>Kit Price</th><th>Actions</th></tr></thead>
+                            <tbody id="groups-table-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="services" class="page-section">
+                    <h3>Services</h3>
+                    <p class="text-muted small">Non-stock charges like installation, labour, or support — these don't affect item stock.</p>
+                    <div class="card p-3 mb-3 shadow-sm border-0">
+                        <form id="service-form" class="row g-2">
+                            <div class="col-md-4"><input type="text" id="service-name" class="form-control" placeholder="Service Name" required></div>
+                            <div class="col-md-4"><input type="text" id="service-desc" class="form-control" placeholder="Description"></div>
+                            <div class="col-md-3"><input type="number" id="service-price" class="form-control" placeholder="Price" required></div>
+                            <div class="col-md-1"><button type="submit" class="btn btn-primary w-100"><i class="fas fa-plus"></i></button></div>
+                        </form>
+                    </div>
+                    <div class="card shadow-sm border-0">
+                        <table class="table table-hover mb-0">
+                            <thead><tr><th>Name</th><th>Description</th><th>Price</th><th>Actions</th></tr></thead>
+                            <tbody id="services-table-body"></tbody>
                         </table>
                     </div>
                 </div>

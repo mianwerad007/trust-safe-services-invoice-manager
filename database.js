@@ -50,8 +50,12 @@ function initDatabase() {
             description TEXT,
             unit TEXT,  
             price REAL,
-            stock INTEGER
-        )`);
+            stock INTEGER,
+            image TEXT
+        )`, () => {
+            // CHANGED: for DBs created before the image column existed
+            db.run(`ALTER TABLE items ADD COLUMN image TEXT`, () => {});
+        });
 
         // 5. Invoices (Added Tax and Service Charge)
         db.run(`CREATE TABLE IF NOT EXISTS invoices (
@@ -77,8 +81,12 @@ function initDatabase() {
             qty INTEGER,
             price REAL,
             total REAL,
+            group_components TEXT,
             FOREIGN KEY(invoice_id) REFERENCES invoices(id)
-        )`);
+        )`, () => {
+            // CHANGED: for DBs created before the group_components column existed
+            db.run(`ALTER TABLE invoice_items ADD COLUMN group_components TEXT`, () => {});
+        });
 
         // 7. NEW: Activity Logs
         db.run(`CREATE TABLE IF NOT EXISTS logs (
@@ -112,7 +120,34 @@ function initDatabase() {
             qty INTEGER,
             price REAL,
             total REAL,
+            group_components TEXT,
             FOREIGN KEY(quotation_id) REFERENCES quotations(id)
+        )`, () => {
+            // CHANGED: for DBs created before the group_components column existed
+            db.run(`ALTER TABLE quotation_items ADD COLUMN group_components TEXT`, () => {});
+        });
+
+        // 9. NEW: Services (labour/installation/other non-stock charges)
+        db.run(`CREATE TABLE IF NOT EXISTS services (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            description TEXT,
+            price REAL
+        )`);
+
+        // 10. NEW: Product Groups / Bundles (e.g. "CCTV 4 Channel Kit")
+        db.run(`CREATE TABLE IF NOT EXISTS product_groups (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            name TEXT,
+            description TEXT
+        )`);
+        db.run(`CREATE TABLE IF NOT EXISTS product_group_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            group_id INTEGER,
+            item_id INTEGER,
+            qty INTEGER,
+            FOREIGN KEY(group_id) REFERENCES product_groups(id),
+            FOREIGN KEY(item_id) REFERENCES items(id)
         )`);
     });
 }

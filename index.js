@@ -38,13 +38,18 @@ function initDatabase() {
             `CREATE TABLE IF NOT EXISTS customers (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, phone TEXT, email TEXT, address TEXT)`,
         );
         db.run(
-            `CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, unit TEXT, price REAL, stock INTEGER)`,
+            `CREATE TABLE IF NOT EXISTS items (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, unit TEXT, price REAL, stock INTEGER, image TEXT)`,
+            () => {
+                // CHANGED: for DBs created before the image column existed
+                db.run(`ALTER TABLE items ADD COLUMN image TEXT`, () => {});
+            },
         );
         db.run(
             `CREATE TABLE IF NOT EXISTS invoices (id INTEGER PRIMARY KEY AUTOINCREMENT, invoice_no TEXT UNIQUE, customer_id INTEGER, date TEXT, subtotal REAL, discount_percent REAL, discount_amount REAL, tax_percent REAL DEFAULT 0, service_charge REAL DEFAULT 0, grand_total REAL, FOREIGN KEY(customer_id) REFERENCES customers(id))`,
         );
         db.run(
-            `CREATE TABLE IF NOT EXISTS invoice_items (id INTEGER PRIMARY KEY AUTOINCREMENT, invoice_id INTEGER, item_name TEXT, description TEXT, qty INTEGER, price REAL, total REAL, FOREIGN KEY(invoice_id) REFERENCES invoices(id))`,
+            `CREATE TABLE IF NOT EXISTS invoice_items (id INTEGER PRIMARY KEY AUTOINCREMENT, invoice_id INTEGER, item_name TEXT, description TEXT, qty INTEGER, price REAL, total REAL, group_components TEXT, FOREIGN KEY(invoice_id) REFERENCES invoices(id))`,
+            () => db.run(`ALTER TABLE invoice_items ADD COLUMN group_components TEXT`, () => {}),
         );
         db.run(
             `CREATE TABLE IF NOT EXISTS logs (id INTEGER PRIMARY KEY AUTOINCREMENT, username TEXT, action TEXT, details TEXT, timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)`,
@@ -53,7 +58,17 @@ function initDatabase() {
             `CREATE TABLE IF NOT EXISTS quotations (id INTEGER PRIMARY KEY AUTOINCREMENT, quotation_no TEXT UNIQUE, customer_id INTEGER, date TEXT, subtotal REAL, discount_percent REAL, discount_amount REAL, tax_percent REAL DEFAULT 0, service_charge REAL DEFAULT 0, grand_total REAL, FOREIGN KEY(customer_id) REFERENCES customers(id))`,
         );
         db.run(
-            `CREATE TABLE IF NOT EXISTS quotation_items (id INTEGER PRIMARY KEY AUTOINCREMENT, quotation_id INTEGER, item_name TEXT, description TEXT, qty INTEGER, price REAL, total REAL, FOREIGN KEY(quotation_id) REFERENCES quotations(id))`,
+            `CREATE TABLE IF NOT EXISTS quotation_items (id INTEGER PRIMARY KEY AUTOINCREMENT, quotation_id INTEGER, item_name TEXT, description TEXT, qty INTEGER, price REAL, total REAL, group_components TEXT, FOREIGN KEY(quotation_id) REFERENCES quotations(id))`,
+            () => db.run(`ALTER TABLE quotation_items ADD COLUMN group_components TEXT`, () => {}),
+        );
+        db.run(
+            `CREATE TABLE IF NOT EXISTS services (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT, price REAL)`,
+        );
+        db.run(
+            `CREATE TABLE IF NOT EXISTS product_groups (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, description TEXT)`,
+        );
+        db.run(
+            `CREATE TABLE IF NOT EXISTS product_group_items (id INTEGER PRIMARY KEY AUTOINCREMENT, group_id INTEGER, item_id INTEGER, qty INTEGER, FOREIGN KEY(group_id) REFERENCES product_groups(id), FOREIGN KEY(item_id) REFERENCES items(id))`,
         );
     });
 }
@@ -150,8 +165,8 @@ app.get("/api/items", isAuthenticated, (req, res) =>
 app.post("/api/items", isAuthenticated, (req, res) => {
     const d = req.body;
     db.run(
-        "INSERT INTO items (name, description, unit, price, stock) VALUES (?,?,?,?,?)",
-        [d.name, d.desc, d.unit, d.price, d.stock],
+        "INSERT INTO items (name, description, unit, price, stock, image) VALUES (?,?,?,?,?,?)",
+        [d.name, d.desc, d.unit, d.price, d.stock, d.image || null],
         function () {
             res.json({ id: this.lastID });
         },
@@ -160,8 +175,8 @@ app.post("/api/items", isAuthenticated, (req, res) => {
 app.post("/api/items/update", isAuthenticated, (req, res) => {
     const d = req.body;
     db.run(
-        "UPDATE items SET name=?, description=?, unit=?, price=?, stock=? WHERE id=?",
-        [d.name, d.desc, d.unit, d.price, d.stock, d.id],
+        "UPDATE items SET name=?, description=?, unit=?, price=?, stock=?, image=? WHERE id=?",
+        [d.name, d.desc, d.unit, d.price, d.stock, d.image || null, d.id],
         () => res.json(true),
     );
 });

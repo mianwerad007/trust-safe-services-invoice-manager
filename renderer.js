@@ -2,6 +2,10 @@ let currentUserRole = '';
 let currentUsername = '';
 let currentUserPerms = [];
 let allItems = [];
+let allGroups = [];
+let allServices = [];
+let groupBuilderItems = []; // components being assembled for the group currently being created/edited
+let editingGroupId = null;
 let editModal;
 let lowStockModal;
 let salesChart = null;
@@ -15,6 +19,13 @@ window.onload = () => {
 
     const searchInput = document.getElementById('product-search');
     if (searchInput) searchInput.addEventListener('input', handleItemSearch);
+
+    const groupSearchInput = document.getElementById('group-search');
+    if (groupSearchInput) groupSearchInput.addEventListener('input', handleGroupSearch);
+    const serviceSearchInput = document.getElementById('service-search');
+    if (serviceSearchInput) serviceSearchInput.addEventListener('input', handleServiceSearch);
+    const groupComponentSearchInput = document.getElementById('group-component-search');
+    if (groupComponentSearchInput) groupComponentSearchInput.addEventListener('input', handleGroupComponentSearch);
 
     const dashSearch = document.getElementById('dashboard-search');
     const dashResults = document.getElementById('dashboard-search-results');
@@ -62,6 +73,8 @@ function hasPermission(perm) { if (currentUserRole === 'admin') return true; ret
 function showPage(pageId, init = true) {
     if (pageId === 'create-invoice' && !hasPermission('create_invoice')) return alert("Access Denied");
     if (pageId === 'items' && !hasPermission('manage_items')) return alert("Access Denied");
+    if (pageId === 'groups' && !hasPermission('manage_items')) return alert("Access Denied");
+    if (pageId === 'services' && !hasPermission('manage_items')) return alert("Access Denied");
     if (pageId === 'customers' && !hasPermission('manage_customers')) return alert("Access Denied");
     if (pageId === 'settings' && !hasPermission('manage_settings')) return alert("Access Denied");
 
@@ -74,6 +87,8 @@ function showPage(pageId, init = true) {
     if(pageId === 'create-invoice') navId = 'nav-create';
     if(pageId === 'quotations') navId = 'nav-quotes';
     if(pageId === 'items') navId = 'nav-items';
+    if(pageId === 'groups') navId = 'nav-groups';
+    if(pageId === 'services') navId = 'nav-services';
     if(pageId === 'customers') navId = 'nav-customers';
     if(pageId === 'view-invoices') navId = 'nav-history';
     if(pageId === 'users') navId = 'nav-users';
@@ -85,6 +100,8 @@ function showPage(pageId, init = true) {
     if (init) {
         if (pageId === 'dashboard') loadDashboard();
         if (pageId === 'items') loadItems();
+        if (pageId === 'groups') loadGroups();
+        if (pageId === 'services') loadServices();
         if (pageId === 'customers') loadCustomers();
         if (pageId === 'create-invoice') setupInvoicePage();
         if (pageId === 'quotations') loadQuotations();
@@ -99,6 +116,8 @@ function updateSidebarVisibility() {
     const map = [
         { id: 'nav-create', perm: 'create_invoice' },
         { id: 'nav-items', perm: 'manage_items' },
+        { id: 'nav-groups', perm: 'manage_items' },
+        { id: 'nav-services', perm: 'manage_items' },
         { id: 'nav-customers', perm: 'manage_customers' },
         { id: 'nav-settings', perm: 'manage_settings' },
         { id: 'qa-new-invoice', perm: 'create_invoice' },
@@ -190,6 +209,8 @@ async function setupInvoicePage() {
     document.getElementById('inv-grand-total').innerText = '0.00';
 
     allItems = await window.api.getItems();
+    allGroups = await window.api.getGroups();
+    allServices = await window.api.getServices();
     const customers = await window.api.getCustomers();
     const sel = document.getElementById('inv-customer');
     sel.innerHTML = '<option value="">Select Customer</option>';
@@ -257,6 +278,92 @@ function addItemToInvoice(item) {
     }
 }
 
+// --- BUNDLES / GROUPS: search + add to invoice ---
+function handleGroupSearch(e) {
+    const query = e.target.value.toLowerCase();
+    const list = document.getElementById('group-list');
+    if (query.length < 1) { list.style.display = 'none'; return; }
+    const matches = (allGroups || []).filter(g => g.name.toLowerCase().includes(query));
+    list.innerHTML = '';
+    matches.forEach(g => {
+        const div = document.createElement('div');
+        div.className = 'item-list-option';
+        const contains = (g.items || []).map(it => it.name).join(', ');
+        div.innerHTML = `<span class="badge bg-primary me-1">KIT</span><strong>${g.name}</strong><br><small class="text-muted">${contains}</small>`;
+        div.onclick = () => { addGroupToInvoice(g); list.style.display = 'none'; e.target.value = ''; };
+        list.appendChild(div);
+    });
+    list.style.display = matches.length ? 'block' : 'none';
+}
+
+function addGroupToInvoice(group) {
+    const tbody = document.getElementById('inv-items-body');
+    const existingRow = Array.from(tbody.querySelectorAll('tr')).find(row => row.getAttribute('data-group-id') == group.id);
+    if (existingRow) {
+        const qtyInput = existingRow.querySelector('.qty');
+        qtyInput.value = parseInt(qtyInput.value) + 1;
+        calcInvoiceFinal();
+        return;
+    }
+    if (!group.items || group.items.length === 0) { alert('This kit has no items in it. Edit it from the Bundles / Groups page first.'); return; }
+
+    const components = group.items.map(it => ({ id: it.item_id, name: it.name, qty: it.qty, price: it.price }));
+    const unitPrice = components.reduce((sum, c) => sum + (parseFloat(c.price) || 0) * (parseFloat(c.qty) || 0), 0);
+    const compSummary = components.map(c => `${c.name} x${c.qty}`).join(', ');
+
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-group-id', group.id);
+    tr.setAttribute('data-components', JSON.stringify(components));
+    tr.innerHTML = `
+        <td><span class="badge bg-primary me-1">KIT</span><b>${group.name}</b><br><small class="text-muted">${compSummary}</small></td>
+        <td><input class="form-control price" value="${unitPrice}" readonly></td>
+        <td><input class="form-control qty" value="1" min="1" oninput="calcInvoiceFinal()"></td>
+        <td><span class="row-total fw-bold">${unitPrice}</span></td>
+        <td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); calcInvoiceFinal()">x</button></td>
+    `;
+    tbody.appendChild(tr);
+    calcInvoiceFinal();
+}
+
+// --- SERVICES: search + add to invoice ---
+function handleServiceSearch(e) {
+    const query = e.target.value.toLowerCase();
+    const list = document.getElementById('service-list');
+    if (query.length < 1) { list.style.display = 'none'; return; }
+    const matches = (allServices || []).filter(s => s.name.toLowerCase().includes(query));
+    list.innerHTML = '';
+    matches.forEach(s => {
+        const div = document.createElement('div');
+        div.className = 'item-list-option';
+        div.innerHTML = `<span class="badge bg-secondary me-1">SERVICE</span><strong>${s.name}</strong> - PKR ${s.price}`;
+        div.onclick = () => { addServiceToInvoice(s); list.style.display = 'none'; e.target.value = ''; };
+        list.appendChild(div);
+    });
+    list.style.display = matches.length ? 'block' : 'none';
+}
+
+function addServiceToInvoice(service) {
+    const tbody = document.getElementById('inv-items-body');
+    const existingRow = Array.from(tbody.querySelectorAll('tr')).find(row => row.getAttribute('data-service-id') == service.id);
+    if (existingRow) {
+        const qtyInput = existingRow.querySelector('.qty');
+        qtyInput.value = parseInt(qtyInput.value) + 1;
+        calcInvoiceFinal();
+        return;
+    }
+    const tr = document.createElement('tr');
+    tr.setAttribute('data-service-id', service.id);
+    tr.innerHTML = `
+        <td><span class="badge bg-secondary me-1">SERVICE</span><b>${service.name}</b><br><small class="text-muted">${service.description || ''}</small></td>
+        <td><input class="form-control price" value="${service.price}" readonly></td>
+        <td><input class="form-control qty" value="1" min="1" oninput="calcInvoiceFinal()"></td>
+        <td><span class="row-total fw-bold">${service.price}</span></td>
+        <td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); calcInvoiceFinal()">x</button></td>
+    `;
+    tbody.appendChild(tr);
+    calcInvoiceFinal();
+}
+
 function calcInvoiceFinal() {
     let subtotal = 0;
     document.querySelectorAll('#inv-items-body tr').forEach(row => {
@@ -307,6 +414,10 @@ async function preparePrint(isQuote = false) {
     const printBody = document.getElementById('print-table-body');
     printBody.innerHTML = '';
     let totalQty = 0;
+
+    // CHANGED: auto-shrink the print layout once an invoice has many line items,
+    // so 15-20+ items still fit on a single A4 page instead of spilling to page 2.
+    document.getElementById('printable-area').classList.toggle('ultra-compact', screenRows.length > 12);
     
     screenRows.forEach((row, index) => {
         const name = row.cells[0].querySelector('b').innerText;
@@ -315,10 +426,15 @@ async function preparePrint(isQuote = false) {
         const qty = parseInt(row.querySelector('.qty').value);
         const total = row.querySelector('.row-total').innerText;
         const id = row.getAttribute('data-id');
+        const isGroup = row.hasAttribute('data-group-id') || row.hasAttribute('data-components');
+        const isService = row.hasAttribute('data-service-id');
         const itemObj = allItems.find(i => i.id == id);
-        const unit = itemObj ? (itemObj.unit || 'Pc') : 'Pc';
+        const unit = itemObj ? (itemObj.unit || 'Pc') : (isGroup ? 'Set' : (isService ? 'Service' : 'Pc'));
         totalQty += qty;
-        printBody.innerHTML += `<tr><td class="col-sr">${index + 1}</td><td class="col-item"><b>${name}</b><br><i style="font-size:9pt;">${desc}</i></td><td class="col-qty">${qty}</td><td class="col-unit">${unit}</td><td class="col-price">Rs ${parseFloat(price).toLocaleString()}</td><td class="col-amt">Rs ${parseFloat(total).toLocaleString()}</td></tr>`;
+        // CHANGED: show the item's photo (if any) and a KIT/SERVICE badge on the printed line
+        const photo = (itemObj && itemObj.image) ? `<img src="${itemObj.image}" class="print-item-photo">` : '';
+        const badge = isGroup ? '<span class="print-badge kit">KIT</span>' : (isService ? '<span class="print-badge service">SERVICE</span>' : '');
+        printBody.innerHTML += `<tr><td class="col-sr">${index + 1}</td><td class="col-item"><div class="item-cell">${photo}<div>${badge}<b>${name}</b><br><i style="font-size:9pt;">${desc}</i></div></div></td><td class="col-qty">${qty}</td><td class="col-unit">${unit}</td><td class="col-price">Rs ${parseFloat(price).toLocaleString()}</td><td class="col-amt">Rs ${parseFloat(total).toLocaleString()}</td></tr>`;
     });
 
     document.getElementById('print-total-qty').innerText = totalQty;
@@ -371,15 +487,18 @@ async function saveInvoice() {
     const items = [];
     document.querySelectorAll('#inv-items-body tr').forEach(row => {
         const id = row.getAttribute('data-id');
+        const compAttr = row.getAttribute('data-components');
+        const isService = row.hasAttribute('data-service-id');
         const itemObj = allItems.find(i => i.id == id);
         items.push({
-            id: id,
+            id: id || null,
             name: row.cells[0].querySelector('b').innerText,
-            desc: row.cells[0].querySelector('small').innerText,
-            unit: itemObj ? itemObj.unit : 'Pc',
+            desc: row.cells[0].querySelector('small') ? row.cells[0].querySelector('small').innerText : '',
+            unit: itemObj ? itemObj.unit : (compAttr ? 'Set' : (isService ? 'Service' : 'Pc')),
             price: row.querySelector('.price').value,
             qty: row.querySelector('.qty').value,
-            total: row.querySelector('.row-total').innerText
+            total: row.querySelector('.row-total').innerText,
+            components: compAttr ? JSON.parse(compAttr) : null
         });
     });
 
@@ -413,12 +532,19 @@ async function saveQuotation() {
     
     const items = [];
     document.querySelectorAll('#inv-items-body tr').forEach(row => {
+        const id = row.getAttribute('data-id');
+        const compAttr = row.getAttribute('data-components');
+        const isService = row.hasAttribute('data-service-id');
+        const itemObj = allItems.find(i => i.id == id);
         items.push({
+            id: id || null,
             name: row.cells[0].querySelector('b').innerText,
-            desc: row.cells[0].querySelector('small').innerText,
+            desc: row.cells[0].querySelector('small') ? row.cells[0].querySelector('small').innerText : '',
+            unit: itemObj ? itemObj.unit : (compAttr ? 'Set' : (isService ? 'Service' : 'Pc')),
             price: row.querySelector('.price').value,
             qty: row.querySelector('.qty').value,
-            total: row.querySelector('.row-total').innerText
+            total: row.querySelector('.row-total').innerText,
+            components: compAttr ? JSON.parse(compAttr) : null
         });
     });
 
@@ -471,7 +597,9 @@ async function convertQuoteToInv(id) {
         const itemId = storeItem ? storeItem.id : '';
         const tr = document.createElement('tr');
         tr.setAttribute('data-id', itemId);
-        tr.innerHTML = `<td><b>${i.item_name}</b><br><small class="text-muted">${i.description}</small></td><td><input class="form-control price" value="${i.price}" readonly></td><td><input class="form-control qty" value="${i.qty}" oninput="calcInvoiceFinal()"></td><td><span class="row-total fw-bold">${i.total}</span></td><td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); calcInvoiceFinal()">x</button></td>`;
+        if (i.group_components) tr.setAttribute('data-components', i.group_components);
+        const badge = i.group_components ? '<span class="badge bg-primary me-1">KIT</span>' : '';
+        tr.innerHTML = `<td>${badge}<b>${i.item_name}</b><br><small class="text-muted">${i.description}</small></td><td><input class="form-control price" value="${i.price}" readonly></td><td><input class="form-control qty" value="${i.qty}" oninput="calcInvoiceFinal()"></td><td><span class="row-total fw-bold">${i.total}</span></td><td class="text-center"><button class="btn btn-danger btn-sm" onclick="this.closest('tr').remove(); calcInvoiceFinal()">x</button></td>`;
         tbody.appendChild(tr);
     });
 
@@ -490,22 +618,303 @@ async function loadLogs() {
 
 async function loadItems() {
     allItems = await window.api.getItems();
+    renderItemsTable();
+}
+
+// CHANGED: split out from loadItems so the search box can re-render without refetching
+function renderItemsTable() {
     const tbody = document.getElementById('items-table-body');
+    const searchEl = document.getElementById('items-search');
+    const query = searchEl ? searchEl.value.toLowerCase().trim() : '';
+    const list = query ? allItems.filter(i => i.name.toLowerCase().includes(query) || (i.description || '').toLowerCase().includes(query)) : allItems;
+
     tbody.innerHTML = '';
-    allItems.forEach((i, idx) => {
+    list.forEach((i, idx) => {
         let stockClass = '';
         if (i.stock <= 10) stockClass = 'text-danger fw-bold';
         else if (i.stock <= 50) stockClass = 'text-warning fw-bold';
         else stockClass = 'text-success fw-bold';
-        tbody.innerHTML += `<tr><td>${idx+1}</td><td>${i.name}</td><td>${i.description||'-'}</td><td>${i.unit||'Pc'}</td><td>${i.price}</td><td class="${stockClass}">${i.stock}</td><td><button class="btn btn-sm btn-warning" onclick='openEditItem(${JSON.stringify(i)})'>Edit</button> <button class="btn btn-sm btn-danger" onclick="delItem(${i.id})">Del</button></td></tr>`;
+        const thumb = i.image
+            ? `<img src="${i.image}" style="width:32px;height:32px;object-fit:cover;border-radius:4px;border:1px solid #ddd;">`
+            : `<div style="width:32px;height:32px;border-radius:4px;background:#eee;display:flex;align-items:center;justify-content:center;"><i class="fas fa-image text-muted" style="font-size:12px;"></i></div>`;
+        tbody.innerHTML += `<tr><td>${thumb}</td><td>${idx+1}</td><td>${i.name}</td><td>${i.description||'-'}</td><td>${i.unit||'Pc'}</td><td>${i.price}</td><td class="${stockClass}">${i.stock}</td><td><button class="btn btn-sm btn-warning" onclick='openEditItem(${JSON.stringify(i)})'>Edit</button> <button class="btn btn-sm btn-danger" onclick="delItem(${i.id})">Del</button></td></tr>`;
     });
 }
+
+// CHANGED: optional product photo - resized client-side so the DB doesn't bloat with huge images
+function previewItemImage(input, previewId) {
+    const preview = document.getElementById(previewId);
+    if (!input.files || !input.files[0]) return;
+    resizeImageFile(input.files[0], 200, (dataUrl) => {
+        preview.src = dataUrl;
+        preview.style.display = 'inline-block';
+        preview.setAttribute('data-value', dataUrl);
+    });
+}
+
+function resizeImageFile(file, maxSize, callback) {
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+            let { width, height } = img;
+            if (width > height && width > maxSize) { height *= maxSize / width; width = maxSize; }
+            else if (height > maxSize) { width *= maxSize / height; height = maxSize; }
+            const canvas = document.createElement('canvas');
+            canvas.width = width; canvas.height = height;
+            canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+            callback(canvas.toDataURL('image/jpeg', 0.75));
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
 document.getElementById('item-form').onsubmit = async (e) => {
     e.preventDefault();
-    await window.api.addItem({ name: document.getElementById('item-name').value, desc: document.getElementById('item-desc').value, unit: document.getElementById('item-unit').value, price: document.getElementById('item-price').value, stock: document.getElementById('item-stock').value });
-    e.target.reset(); loadItems();
+    const preview = document.getElementById('item-img-preview');
+    const image = preview && preview.style.display !== 'none' ? preview.getAttribute('data-value') : null;
+    await window.api.addItem({ name: document.getElementById('item-name').value, desc: document.getElementById('item-desc').value, unit: document.getElementById('item-unit').value, price: document.getElementById('item-price').value, stock: document.getElementById('item-stock').value, image });
+    e.target.reset();
+    if (preview) { preview.style.display = 'none'; preview.removeAttribute('data-value'); preview.src = ''; }
+    loadItems();
 };
 async function delItem(id) { if(confirm('Delete?')) { await window.api.deleteItem({id, user: currentUsername}); loadItems(); }}
+
+// --- ITEMS: BATCH IMPORT / EXPORT / TEMPLATE ---
+function csvEscape(val) {
+    val = (val === null || val === undefined) ? '' : String(val);
+    if (val.includes(',') || val.includes('"') || val.includes('\n')) return '"' + val.replace(/"/g, '""') + '"';
+    return val;
+}
+function downloadTextFile(filename, content) {
+    const blob = new Blob([content], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+}
+function downloadItemsTemplate() {
+    const header = 'Name,Description,Unit,Price,Stock\n';
+    const sample = 'Sample Item,A short description,Pc,500,20\n';
+    downloadTextFile('items_import_template.csv', header + sample);
+}
+function exportItemsCSV() {
+    const header = 'Name,Description,Unit,Price,Stock\n';
+    const rows = allItems.map(i => [i.name, i.description, i.unit, i.price, i.stock].map(csvEscape).join(',')).join('\n');
+    downloadTextFile('items_export.csv', header + rows);
+}
+// Minimal CSV line parser that handles quoted fields containing commas
+function parseCSVLine(line) {
+    const out = []; let cur = ''; let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+        const ch = line[i];
+        if (inQuotes) {
+            if (ch === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+            else if (ch === '"') { inQuotes = false; }
+            else { cur += ch; }
+        } else {
+            if (ch === '"') inQuotes = true;
+            else if (ch === ',') { out.push(cur); cur = ''; }
+            else cur += ch;
+        }
+    }
+    out.push(cur);
+    return out;
+}
+async function importItemsCSV(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    const text = await file.text();
+    const lines = text.split(/\r?\n/).filter(l => l.trim() !== '');
+    if (lines.length < 2) { alert('CSV is empty. Use the Template button to get the right format.'); event.target.value = ''; return; }
+
+    const header = parseCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+    const idx = {
+        name: header.indexOf('name'),
+        desc: header.indexOf('description'),
+        unit: header.indexOf('unit'),
+        price: header.indexOf('price'),
+        stock: header.indexOf('stock')
+    };
+    if (idx.name === -1 || idx.price === -1) {
+        alert('CSV must have at least "Name" and "Price" columns. Use the Template button to get the right format.');
+        event.target.value = '';
+        return;
+    }
+
+    let success = 0, failed = 0;
+    for (let i = 1; i < lines.length; i++) {
+        const cols = parseCSVLine(lines[i]);
+        const name = (cols[idx.name] || '').trim();
+        const price = parseFloat(cols[idx.price]);
+        if (!name || isNaN(price)) { failed++; continue; }
+        try {
+            await window.api.addItem({
+                name,
+                desc: idx.desc !== -1 ? (cols[idx.desc] || '') : '',
+                unit: idx.unit !== -1 ? (cols[idx.unit] || 'Pc') : 'Pc',
+                price,
+                stock: idx.stock !== -1 ? (parseInt(cols[idx.stock]) || 0) : 0,
+                image: null
+            });
+            success++;
+        } catch (err) { failed++; }
+    }
+    event.target.value = '';
+    alert(`Import finished.\nAdded: ${success}\nSkipped/Failed: ${failed}`);
+    loadItems();
+}
+
+// --- BUNDLES / GROUPS MANAGEMENT ---
+async function loadGroups() {
+    allGroups = await window.api.getGroups();
+    renderGroupsTable();
+}
+function renderGroupsTable() {
+    const tbody = document.getElementById('groups-table-body');
+    tbody.innerHTML = allGroups.map(g => {
+        const contains = (g.items || []).map(it => `${it.name} x${it.qty}`).join(', ') || '-';
+        const total = (g.items || []).reduce((sum, it) => sum + (parseFloat(it.price) || 0) * (parseFloat(it.qty) || 0), 0);
+        return `<tr><td class="fw-bold">${g.name}</td><td><small>${contains}</small></td><td>${total.toFixed(2)}</td>
+            <td><button class="btn btn-sm btn-warning" onclick='editGroup(${JSON.stringify(g)})'>Edit</button> <button class="btn btn-sm btn-danger" onclick="delGroup(${g.id})">Del</button></td></tr>`;
+    }).join('');
+}
+
+function handleGroupComponentSearch(e) {
+    const query = e.target.value.toLowerCase();
+    const list = document.getElementById('group-component-list');
+    if (query.length < 1) { list.style.display = 'none'; return; }
+    const matches = allItems.filter(i => i.name.toLowerCase().includes(query));
+    list.innerHTML = '';
+    matches.forEach(i => {
+        const div = document.createElement('div');
+        div.className = 'item-list-option';
+        div.innerHTML = `<strong>${i.name}</strong> - PKR ${i.price}`;
+        div.onclick = () => { addComponentToGroupBuilder(i); list.style.display = 'none'; e.target.value = ''; };
+        list.appendChild(div);
+    });
+    list.style.display = matches.length ? 'block' : 'none';
+}
+
+function addComponentToGroupBuilder(item) {
+    const existing = groupBuilderItems.find(x => x.id === item.id);
+    if (existing) existing.qty += 1;
+    else groupBuilderItems.push({ id: item.id, name: item.name, price: item.price, qty: 1 });
+    renderGroupBuilderList();
+}
+
+function updateGroupBuilderQty(id, qty) {
+    const comp = groupBuilderItems.find(x => x.id === id);
+    if (comp) comp.qty = parseInt(qty) || 1;
+    renderGroupBuilderList();
+}
+
+function removeGroupBuilderItem(id) {
+    groupBuilderItems = groupBuilderItems.filter(x => x.id !== id);
+    renderGroupBuilderList();
+}
+
+function renderGroupBuilderList() {
+    const tbody = document.getElementById('group-builder-body');
+    if (groupBuilderItems.length === 0) {
+        tbody.innerHTML = '<tr id="group-builder-empty"><td colspan="4" class="text-center text-muted">No items added yet. Search above to add items into this kit.</td></tr>';
+        document.getElementById('group-builder-total').innerText = '0.00';
+        return;
+    }
+    let total = 0;
+    tbody.innerHTML = groupBuilderItems.map(c => {
+        total += (parseFloat(c.price) || 0) * (parseFloat(c.qty) || 0);
+        return `<tr><td>${c.name}</td><td><input type="number" min="1" class="form-control form-control-sm" value="${c.qty}" onchange="updateGroupBuilderQty(${c.id}, this.value)"></td><td>${c.price}</td><td><button class="btn btn-sm btn-danger" onclick="removeGroupBuilderItem(${c.id})">x</button></td></tr>`;
+    }).join('');
+    document.getElementById('group-builder-total').innerText = total.toFixed(2);
+}
+
+async function saveGroupForm() {
+    const name = document.getElementById('group-name').value.trim();
+    if (!name) return alert('Enter a kit/group name');
+    if (groupBuilderItems.length === 0) return alert('Add at least one item to this kit');
+
+    const payload = {
+        name,
+        description: document.getElementById('group-desc').value,
+        items: groupBuilderItems.map(c => ({ id: c.id, qty: c.qty }))
+    };
+    if (editingGroupId) {
+        await window.api.updateGroup({ ...payload, id: editingGroupId });
+    } else {
+        await window.api.saveGroup(payload);
+    }
+    resetGroupBuilder();
+    loadGroups();
+}
+
+function editGroup(g) {
+    editingGroupId = g.id;
+    document.getElementById('group-name').value = g.name;
+    document.getElementById('group-desc').value = g.description || '';
+    groupBuilderItems = (g.items || []).map(it => ({ id: it.item_id, name: it.name, price: it.price, qty: it.qty }));
+    renderGroupBuilderList();
+    document.getElementById('group-cancel-edit-btn').style.display = 'inline-block';
+    document.getElementById('group-save-btn').innerHTML = '<i class="fas fa-save"></i> Update Kit';
+    document.getElementById('groups').scrollIntoView({ behavior: 'smooth' });
+}
+
+function resetGroupBuilder() {
+    editingGroupId = null;
+    groupBuilderItems = [];
+    document.getElementById('group-name').value = '';
+    document.getElementById('group-desc').value = '';
+    document.getElementById('group-cancel-edit-btn').style.display = 'none';
+    document.getElementById('group-save-btn').innerHTML = '<i class="fas fa-save"></i> Save Kit';
+    renderGroupBuilderList();
+}
+
+async function delGroup(id) {
+    if (!confirm('Delete this kit? Items inside it will NOT be deleted, only the kit itself.')) return;
+    await window.api.deleteGroup(id);
+    loadGroups();
+}
+
+// --- SERVICES MANAGEMENT ---
+async function loadServices() {
+    allServices = await window.api.getServices();
+    renderServicesTable();
+}
+function renderServicesTable() {
+    const tbody = document.getElementById('services-table-body');
+    tbody.innerHTML = allServices.map(s => `<tr><td class="fw-bold">${s.name}</td><td>${s.description || '-'}</td><td>${s.price}</td>
+        <td><button class="btn btn-sm btn-warning" onclick='openEditService(${JSON.stringify(s)})'>Edit</button> <button class="btn btn-sm btn-danger" onclick="delService(${s.id})">Del</button></td></tr>`).join('');
+}
+document.getElementById('service-form').onsubmit = async (e) => {
+    e.preventDefault();
+    await window.api.addService({
+        name: document.getElementById('service-name').value,
+        desc: document.getElementById('service-desc').value,
+        price: document.getElementById('service-price').value
+    });
+    e.target.reset();
+    loadServices();
+};
+function openEditService(s) {
+    document.getElementById('edit-modal-body').innerHTML = `
+        <label>Name</label><input id="es-name" class="form-control mb-2" value="${s.name}">
+        <label>Description</label><input id="es-desc" class="form-control mb-2" value="${s.description || ''}">
+        <label>Price</label><input id="es-price" class="form-control mb-2" value="${s.price}">
+    `;
+    document.getElementById('save-edit-btn').onclick = async () => {
+        await window.api.updateService({
+            id: s.id,
+            name: document.getElementById('es-name').value,
+            desc: document.getElementById('es-desc').value,
+            price: document.getElementById('es-price').value
+        });
+        editModal.hide(); loadServices();
+    };
+    editModal.show();
+}
+async function delService(id) { if (confirm('Delete this service?')) { await window.api.deleteService({ id, user: currentUsername }); loadServices(); } }
 
 async function loadCustomers() {
     const c = await window.api.getCustomers();
@@ -527,17 +936,29 @@ function openEditItem(i) {
         <label>Unit</label><select id="ei-unit" class="form-select mb-2"><option value="Pc">Pc</option><option value="Kg">Kg</option><option value="Meter">Meter</option><option value="Box">Box</option><option value="Pkt">Pkt</option></select>
         <label>Price</label><input id="ei-price" class="form-control mb-2" value="${i.price}">
         <label>Stock</label><input id="ei-stock" class="form-control mb-2" value="${i.stock}">
+        <label>Product Photo (optional)</label>
+        <div class="d-flex align-items-center gap-2 mb-2">
+            <img id="ei-img-preview" src="${i.image || ''}" style="${i.image ? '' : 'display:none;'}width:48px;height:48px;object-fit:cover;border-radius:4px;border:1px solid #ddd;">
+            <input type="file" id="ei-img-input" accept="image/*" class="form-control" onchange="previewItemImage(this, 'ei-img-preview')">
+            ${i.image ? `<button type="button" class="btn btn-sm btn-outline-danger" onclick="document.getElementById('ei-img-preview').style.display='none';document.getElementById('ei-img-preview').removeAttribute('data-value');document.getElementById('ei-img-preview').setAttribute('data-removed','1');">Remove</button>` : ''}
+        </div>
     `;
     document.getElementById('ei-unit').value = i.unit || 'Pc';
     
     document.getElementById('save-edit-btn').onclick = async () => {
+        const preview = document.getElementById('ei-img-preview');
+        let image = i.image || null;
+        if (preview.getAttribute('data-removed') === '1') image = null;
+        else if (preview.getAttribute('data-value')) image = preview.getAttribute('data-value');
+
         await window.api.updateItem({ 
             id: i.id, 
             name: document.getElementById('ei-name').value, 
             desc: document.getElementById('ei-desc').value, // Now including description
             price: document.getElementById('ei-price').value, 
             stock: document.getElementById('ei-stock').value, 
-            unit: document.getElementById('ei-unit').value 
+            unit: document.getElementById('ei-unit').value,
+            image
         });
         editModal.hide(); loadItems();
     };
@@ -628,8 +1049,10 @@ async function viewInvoice(id, autoPrint = false) {
     tbody.innerHTML = '';
     invoice.items.forEach(item => {
         const tr = document.createElement('tr');
-        tr.setAttribute('data-id', item.item_id || ''); 
-        tr.innerHTML = `<td><b>${item.item_name}</b><br><small class="text-muted">${item.description||''}</small></td><td><input class="form-control price" value="${item.price}" readonly></td><td><input class="form-control qty" value="${item.qty}" readonly></td><td><span class="row-total fw-bold">${item.total}</span></td><td></td>`;
+        tr.setAttribute('data-id', item.item_id || '');
+        if (item.group_components) tr.setAttribute('data-components', item.group_components);
+        const badge = item.group_components ? '<span class="badge bg-primary me-1">KIT</span>' : '';
+        tr.innerHTML = `<td>${badge}<b>${item.item_name}</b><br><small class="text-muted">${item.description||''}</small></td><td><input class="form-control price" value="${item.price}" readonly></td><td><input class="form-control qty" value="${item.qty}" readonly></td><td><span class="row-total fw-bold">${item.total}</span></td><td></td>`;
         tbody.appendChild(tr);
     });
     document.getElementById('inv-subtotal').innerText = invoice.subtotal;
